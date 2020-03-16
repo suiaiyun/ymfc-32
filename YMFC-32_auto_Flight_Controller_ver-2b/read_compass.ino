@@ -84,16 +84,28 @@ void read_compass()
 
   // 从指南针请求6字节
   HWire.requestFrom(compass_address, 6);
+
+  /* 磁力计正向安装 */
+  #ifdef COMPASS_INSTALL_DIRECTION
   // 将低字节和高字节添加到compass_x变量
   compass_x = HWire.read() | HWire.read() << 8;
+  // 将低字节和高字节添加到compass_y变量
+  compass_y = HWire.read() | HWire.read() << 8;
+  // 将低字节和高字节添加到compass_z变量
+  compass_z = HWire.read() | HWire.read() << 8;
+  compass_z *= -1;
+  #else
+  /* 磁力计反向安装 */
+  compass_x = HWire.read() | HWire.read() << 8;
   // 反转轴的方向
-  //compass_x *= -1;
+  compass_x *= -1;
   // 将低字节和高字节添加到compass_y变量
   compass_y = HWire.read() | HWire.read() << 8;
   // 反转轴的方向
-  //compass_y *= -1;
+  compass_y *= -1;
   // 将低字节和高字节添加到compass_z变量
-  compass_z = HWire.read() | HWire.read() << 8;                      
+  compass_z = HWire.read() | HWire.read() << 8;
+  #endif
 
   /**
    * 在罗盘能给出精确的测量值之前，它需要校准。启动时，罗盘偏移和罗盘刻度
