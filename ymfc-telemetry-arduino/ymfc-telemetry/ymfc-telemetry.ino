@@ -10,6 +10,8 @@
 #define OLED_ADDRESS 0x78
 #define LINE(x) (13*(x))
 #define ROW(x) (7*(x))
+#define SERIAL_PORT Serial2
+
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled(U8G2_R0, PB6, PB7, U8X8_PIN_NONE); 
 
 uint8_t receive_buffer[50], receive_buffer_counter, receive_byte_previous, receive_start_detect;
@@ -43,7 +45,7 @@ byte led;
 uint16_t page_counter = 0;
 
 void setup() {
-  Serial1.begin(9600);
+  SERIAL_PORT.begin(9600);
   pinMode(STM32_Board_LED, OUTPUT);
   digitalWrite(STM32_Board_LED, HIGH);
 
@@ -71,8 +73,6 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(STM32_Board_LED, !digitalRead(STM32_Board_LED));
-  
   if (key_press_timer > 0) {
     key_press_timer = 0;
     button_store = -1;
@@ -148,8 +148,8 @@ void loop() {
     flight_timer_start = 0;
   }
 
-  while(Serial1.available()) {                                              //If there are bytes available.      
-    receive_buffer[receive_buffer_counter] = Serial1.read();                //Load them in the received_buffer array.
+  while(SERIAL_PORT.available()) {                                              //If there are bytes available.      
+    receive_buffer[receive_buffer_counter] = SERIAL_PORT.read();                //Load them in the received_buffer array.
     //Search for the start signature in the received data stream.
     if(receive_byte_previous == 'J' && receive_buffer[receive_buffer_counter] == 'B') {
       receive_buffer_counter = 0;                                           //Reset the receive_buffer_counter counter if the start signature if found.
@@ -160,6 +160,7 @@ void loop() {
       receive_buffer_counter ++;                                            //Increment the receive_buffer_counter variable.
       if(receive_buffer_counter > 48)receive_buffer_counter = 0;            //Reset the receive_buffer_counter variable when it becomes larger than 38.
     }
+    digitalWrite(STM32_Board_LED, !digitalRead(STM32_Board_LED));
   }
 
   if(start > 1){
@@ -233,7 +234,7 @@ void loop() {
       else
         oled.print((char)223);
   
-      oled.setCursor(ROW(0), LINE(3));
+      oled.setCursor(ROW(0), LINE(3)+3);
       oled.print("Roll: ");
       if(roll_angle >= 0)
         oled.print("+");
@@ -242,7 +243,7 @@ void loop() {
       if(roll_angle < 10 && roll_angle > -10)
         oled.print("0");
       oled.print(abs(roll_angle));
-      oled.setCursor(ROW(0), LINE(4));
+      oled.setCursor(ROW(0), LINE(4)+6);
       oled.print("Pitch: ");
       if(pitch_angle >= 0)
         oled.print("+");
@@ -266,10 +267,10 @@ void loop() {
       oled.print(max_altitude_from_eeprom);
       oled.print("m");
       
-      oled.setCursor(ROW(0), LINE(3));
+      oled.setCursor(ROW(0), LINE(3)+3);
       oled.print("Lat:");
       oled.print(l_lat_gps);
-      oled.setCursor(ROW(0), LINE(4));
+      oled.setCursor(ROW(0), LINE(4)+6);
       oled.print("Lon:");
       oled.print(l_lon_gps);
     }
@@ -279,15 +280,15 @@ void loop() {
       oled.print("Take-off thr:");
       oled.print(takeoff_throttle); 
 
-      oled.setCursor(ROW(0), LINE(2));
+      oled.setCursor(ROW(0), LINE(2)+3);
       oled.print("1:");
       if(adjustable_setting_1 < 10)oled.print("0");
       oled.print(adjustable_setting_1);
-      oled.setCursor(ROW(0), LINE(3));
+      oled.setCursor(ROW(0), LINE(3)+6);
       oled.print("2:");
       if(adjustable_setting_2 < 10)oled.print("0");
       oled.print(adjustable_setting_2);
-      oled.setCursor(ROW(0), LINE(4));
+      oled.setCursor(ROW(0), LINE(4)+9);
       oled.print("3:");
       if(adjustable_setting_3 < 10)oled.print("0");
       oled.print(adjustable_setting_3);
@@ -492,9 +493,10 @@ void loop() {
     oled.setCursor(ROW(0), LINE(2));
     oled.print("   connection!"); 
     oled.sendBuffer();
-    delay(1000);    
+    digitalWrite(STM32_Board_LED, HIGH);
+//    delay(1000);  
   }
-  if(page > 100){
+  if(page > 100) {
     oled.setCursor(ROW(0), LINE(1));
     oled.print("Error:");
     oled.print(error);
@@ -535,14 +537,14 @@ void loop() {
   }
 }
 
-void get_data(void){
+void get_data(void) {
   check_byte = 0;                                                                         //Reset the check_byte variabel.
   check_byte ^= 'J';
   check_byte ^= 'B';
-  for(temp_byte=0;temp_byte <= 30; temp_byte ++) {
+  for(temp_byte = 0; temp_byte <= 30; temp_byte++) {
     check_byte ^= receive_buffer[temp_byte];  //Calculate the check_byte.
   }
-  if(check_byte == receive_buffer[31]){                                                   //If the calculated check_byte and the received check_byte are the same.
+  if(check_byte == receive_buffer[31]) {                                                   //If the calculated check_byte and the received check_byte are the same.
     if(telemetry_lost > 0){                                                               //If the telemetry signal was lost.
       telemetry_lost = 0;                                                                 //Reset the telemetry lost signal because a valid data stream is received.
       page = 0;                                                                           //Start at page 1.
@@ -602,5 +604,5 @@ void get_data(void){
       l_lat_gps_previous = l_lat_gps;
       l_lon_gps_previous = l_lon_gps;
     }
-  }
+  } 
 }
