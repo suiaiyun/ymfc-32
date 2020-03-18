@@ -1,3 +1,7 @@
+/**
+ * STM32版遥测系统
+ * 使用OLED128x64显示屏
+ */
 #include <Wire.h>
 #include <EEPROM.h>
 #include <U8g2lib.h>
@@ -39,17 +43,21 @@ byte led;
 uint16_t page_counter = 0;
 
 void setup() {
-  Serial2.begin(9600);
-//  pinMode(STM32_Board_LED, OUTPUT);
+  Serial1.begin(9600);
+  pinMode(STM32_Board_LED, OUTPUT);
+  digitalWrite(STM32_Board_LED, HIGH);
 
-  OLED_Init();
+  oled.begin();
+  oled.enableUTF8Print();
+  oled.setFont(u8g2_font_unifont_t_symbols);
+  oled.clearBuffer();
 
-  oled.setCursor(20, LINE(1));
-  oled.print("※ YMFC-32 ※");
+  oled.setCursor(35, LINE(1));
+  oled.print("YMFC-32");
   oled.setCursor(25, LINE(3));
-  oled.print("telemetry"); 
+  oled.print("telemetry");
   oled.sendBuffer();
-  delay(2500);
+  delay(4500);
 
   oled.clear();
 
@@ -59,10 +67,11 @@ void setup() {
   max_altitude_from_eeprom = 0;
   max_speed_from_eeprom = 0;
   max_speed = max_speed_from_eeprom;
+  receive_buffer_counter = 0;
 }
 
 void loop() {
-//  digitalWrite(STM32_Board_LED, !digitalRead(STM32_Board_LED));
+  digitalWrite(STM32_Board_LED, !digitalRead(STM32_Board_LED));
   
   if (key_press_timer > 0) {
     key_press_timer = 0;
@@ -139,15 +148,14 @@ void loop() {
     flight_timer_start = 0;
   }
 
-  while(Serial2.available()){                                                //If there are bytes available.      
-    receive_buffer[receive_buffer_counter] = Serial2.read();                 //Load them in the received_buffer array.
+  while(Serial1.available()) {                                              //If there are bytes available.      
+    receive_buffer[receive_buffer_counter] = Serial1.read();                //Load them in the received_buffer array.
     //Search for the start signature in the received data stream.
-    if(receive_byte_previous == 'J' && receive_buffer[receive_buffer_counter] == 'B'){
+    if(receive_byte_previous == 'J' && receive_buffer[receive_buffer_counter] == 'B') {
       receive_buffer_counter = 0;                                           //Reset the receive_buffer_counter counter if the start signature if found.
       receive_start_detect ++;                                              //Increment the receive_start_detect to check for a full data stream reception.
       if(receive_start_detect >= 2)get_data();                              //If there are two start signatures detected there could be a complete data set available.
-    }
-    else{                                                                   //If there is no start signature detected.
+    } else {                                                                //If there is no start signature detected.
       receive_byte_previous = receive_buffer[receive_buffer_counter];       //Safe the current received byte for the next loop.
       receive_buffer_counter ++;                                            //Increment the receive_buffer_counter variable.
       if(receive_buffer_counter > 48)receive_buffer_counter = 0;            //Reset the receive_buffer_counter variable when it becomes larger than 38.
@@ -166,8 +174,9 @@ void loop() {
 
   if(page == 0) {
     page_counter++;
-    if (page_counter % 100 == 0) oled.clear();
-    if (page_counter < 100) {
+    if (page_counter % 200 == 0) oled.clear();
+    
+    if (page_counter < 200) {
       if(flight_mode <= 3){
         oled.setCursor(ROW(0), LINE(1));
         oled.print("M");
@@ -177,6 +186,8 @@ void loop() {
         oled.print("R");
         oled.print(flight_mode - 4);
       }
+      oled.print("E");
+      oled.print(error);
   
       oled.setCursor(ROW(5), LINE(1));
       if(battery_voltage < 10)
@@ -191,10 +202,6 @@ void loop() {
       if(altitude_meters < 10)oled.print("0");
       oled.print(abs(altitude_meters));
       oled.print("m");
-  
-      oled.setCursor(ROW(2) + 1, LINE(1));
-      oled.print("E");
-      oled.print(error);
   
       oled.setCursor(ROW(0), LINE(2));
       if(fix_type == 3) 
@@ -223,11 +230,11 @@ void loop() {
       oled.print(actual_compass_heading);
       if(heading_lock)
         oled.print("L");
-//      else 
-//        oled.print((char)223);
+      else
+        oled.print((char)223);
   
       oled.setCursor(ROW(0), LINE(3));
-      oled.print("roll: ");
+      oled.print("Roll: ");
       if(roll_angle >= 0)
         oled.print("+");
       else 
@@ -236,7 +243,7 @@ void loop() {
         oled.print("0");
       oled.print(abs(roll_angle));
       oled.setCursor(ROW(0), LINE(4));
-      oled.print("pitch: ");
+      oled.print("Pitch: ");
       if(pitch_angle >= 0)
         oled.print("+");
       else 
@@ -246,7 +253,7 @@ void loop() {
       oled.print(abs(pitch_angle));
     } 
     
-    if (page_counter > 100 && page_counter < 200) {
+    if (page_counter >= 200 && page_counter < 400) {
       oled.setCursor(ROW(0), LINE(1));
       oled.print("Max altitude:");
       oled.setCursor(ROW(0), LINE(2));
@@ -267,23 +274,7 @@ void loop() {
       oled.print(l_lon_gps);
     }
 
-    if (page_counter >= 200 && page_counter < 300) {
-      oled.setCursor(ROW(0), LINE(1));
-      oled.print("Tot flight time");
-      oled.setCursor(ROW(0), LINE(2));
-      hours_flight_time = flight_time_from_eeprom/3600;
-      minutes_flight_time = (flight_time_from_eeprom - (hours_flight_time*3600))/60;
-      seconds_flight_time = flight_time_from_eeprom - (hours_flight_time*3600) - (minutes_flight_time*60);
-      if(hours_flight_time < 10)oled.print("0");
-      oled.print(hours_flight_time);
-      oled.print(":");
-      if(minutes_flight_time < 10)oled.print("0");
-      oled.print(minutes_flight_time);
-      oled.print(":");
-      if(seconds_flight_time < 10)oled.print("0");
-      oled.print(seconds_flight_time);
-    }
-    if (page_counter >= 300 && page_counter < 400) {
+    if (page_counter >= 400 && page_counter < 600) {
       oled.setCursor(ROW(0), LINE(1));
       oled.print("Take-off thr:");
       oled.print(takeoff_throttle); 
@@ -292,17 +283,34 @@ void loop() {
       oled.print("1:");
       if(adjustable_setting_1 < 10)oled.print("0");
       oled.print(adjustable_setting_1);
-      oled.setCursor(ROW(0), LINE(4));
+      oled.setCursor(ROW(0), LINE(3));
       oled.print("2:");
       if(adjustable_setting_2 < 10)oled.print("0");
       oled.print(adjustable_setting_2);
-      oled.setCursor(ROW(0), LINE(3));
+      oled.setCursor(ROW(0), LINE(4));
       oled.print("3:");
       if(adjustable_setting_3 < 10)oled.print("0");
       oled.print(adjustable_setting_3);
     }
+
+//    if (page_counter >= 600 && page_counter < 800) {
+//      oled.setCursor(ROW(0), LINE(1));
+//      oled.print("Tot flight time");
+//      oled.setCursor(ROW(0), LINE(2));
+//      hours_flight_time = flight_time_from_eeprom/3600;
+//      minutes_flight_time = (flight_time_from_eeprom - (hours_flight_time*3600))/60;
+//      seconds_flight_time = flight_time_from_eeprom - (hours_flight_time*3600) - (minutes_flight_time*60);
+//      if(hours_flight_time < 10)oled.print("0");
+//      oled.print(hours_flight_time);
+//      oled.print(":");
+//      if(minutes_flight_time < 10)oled.print("0");
+//      oled.print(minutes_flight_time);
+//      oled.print(":");
+//      if(seconds_flight_time < 10)oled.print("0");
+//      oled.print(seconds_flight_time);
+//    }
     
-    if (page_counter > 400){
+    if (page_counter > 600){
       oled.clear();
       page_counter = 0;
     }
@@ -516,20 +524,24 @@ void loop() {
   }
 
   if((telemetry_lost == 1 || alarm_sound == 1) && next_sound < millis()){
-    digitalWrite(2, HIGH);
+    digitalWrite(PC13, HIGH);
     delay(10);
-    digitalWrite(2, LOW);
+    digitalWrite(PC13, LOW);
     delay(50);
-    digitalWrite(2, HIGH);
+    digitalWrite(PC13, HIGH);
     delay(10);
-    digitalWrite(2, LOW);
+    digitalWrite(PC13, LOW);
     next_sound = millis() + 1000;
   }
 }
 
 void get_data(void){
   check_byte = 0;                                                                         //Reset the check_byte variabel.
-  for(temp_byte=0;temp_byte <= 30; temp_byte ++)check_byte ^= receive_buffer[temp_byte];  //Calculate the check_byte.
+  check_byte ^= 'J';
+  check_byte ^= 'B';
+  for(temp_byte=0;temp_byte <= 30; temp_byte ++) {
+    check_byte ^= receive_buffer[temp_byte];  //Calculate the check_byte.
+  }
   if(check_byte == receive_buffer[31]){                                                   //If the calculated check_byte and the received check_byte are the same.
     if(telemetry_lost > 0){                                                               //If the telemetry signal was lost.
       telemetry_lost = 0;                                                                 //Reset the telemetry lost signal because a valid data stream is received.
@@ -591,13 +603,4 @@ void get_data(void){
       l_lon_gps_previous = l_lon_gps;
     }
   }
-}
-
-void OLED_Init(void)
-{
-  oled.begin();
-  oled.enableUTF8Print();
-  oled.setFont(u8g2_font_unifont_t_symbols);
-  //oled.setFontDirection(0);
-  oled.clearBuffer();
 }
