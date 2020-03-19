@@ -96,4 +96,5 @@ void send_telemetry_data(void) {
     //Send a stop bit
     GPIOB_BASE->BSRR = 0b1 << 0;                                                              //Set output PB0 to 1;
   }
+  delay(1);
 }
