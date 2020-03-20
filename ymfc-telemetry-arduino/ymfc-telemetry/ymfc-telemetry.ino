@@ -45,10 +45,16 @@ byte led;
 uint16_t page_counter = 0;
 
 void setup() {
-  SERIAL_PORT.begin(9600);
   pinMode(STM32_Board_LED, OUTPUT);
   digitalWrite(STM32_Board_LED, HIGH);
 
+  // 使用内部flash模拟EEPROM
+  EEPROM.PageBase0 = 0x801F000;
+  EEPROM.PageBase1 = 0x801F800;
+  EEPROM.PageSize  = 0x400;
+
+  SERIAL_PORT.begin(9600);
+  
   oled.begin();
   oled.enableUTF8Print();
   oled.setFont(u8g2_font_unifont_t_symbols);
@@ -65,11 +71,10 @@ void setup() {
 
   button_store = -1;
   telemetry_lost = 2;
-  flight_time_from_eeprom = 0;
-  max_altitude_from_eeprom = 0;
-  max_speed_from_eeprom = 0;
+  flight_time_from_eeprom = (uint32_t)EEPROM.read(0x00)<< 24 | (uint32_t)EEPROM.read(0x01)<< 16 | (uint32_t)EEPROM.read(0x02)<< 8 | (uint32_t)EEPROM.read(0x03);
+  max_altitude_from_eeprom = EEPROM.read(0x04)<< 8 | EEPROM.read(0x05);
+  max_speed_from_eeprom = (uint32_t)EEPROM.read(0x06);
   max_speed = max_speed_from_eeprom;
-  receive_buffer_counter = 0;
 }
 
 void loop() {
@@ -129,36 +134,40 @@ void loop() {
   if(start == 0 && flight_timer_start == 1){
     if(max_altitude_meters > max_altitude_from_eeprom){
       max_altitude_from_eeprom = max_altitude_meters;
-//      EEPROM.write(0x04, max_altitude_from_eeprom >> 8);
-//      EEPROM.write(0x05, max_altitude_from_eeprom);
+      EEPROM.write(0x04, max_altitude_from_eeprom >> 8);
+      EEPROM.write(0x05, max_altitude_from_eeprom);
     }
 
     if(max_speed > max_speed_from_eeprom){
       max_speed_from_eeprom = max_speed;
-//      EEPROM.write(0x06, max_speed_from_eeprom);
+      EEPROM.write(0x06, max_speed_from_eeprom);
     }
 
     flight_time_from_eeprom += (millis() - flight_timer_from_start)/1000;
-//    EEPROM.write(0x00, flight_time_from_eeprom >> 24);
-//    EEPROM.write(0x01, flight_time_from_eeprom >> 16);
-//    EEPROM.write(0x02, flight_time_from_eeprom >> 8);
-//    EEPROM.write(0x03, flight_time_from_eeprom);
+    EEPROM.write(0x00, flight_time_from_eeprom >> 24);
+    EEPROM.write(0x01, flight_time_from_eeprom >> 16);
+    EEPROM.write(0x02, flight_time_from_eeprom >> 8);
+    EEPROM.write(0x03, flight_time_from_eeprom);
 
     flight_timer_previous = millis() - flight_timer;
     flight_timer_start = 0;
   }
 
   while(SERIAL_PORT.available()) {                                              //If there are bytes available.      
-    receive_buffer[receive_buffer_counter] = char(SERIAL_PORT.read());          //Load them in the received_buffer array.
+    receive_buffer[receive_buffer_counter] = char(SERIAL_PORT.read());                //Load them in the received_buffer array.
     //Search for the start signature in the received data stream.
     if(receive_byte_previous == 'J' && receive_buffer[receive_buffer_counter] == 'B') {
       receive_buffer_counter = 0;                                           //Reset the receive_buffer_counter counter if the start signature if found.
       receive_start_detect ++;                                              //Increment the receive_start_detect to check for a full data stream reception.
-      if(receive_start_detect >= 2)get_data();                              //If there are two start signatures detected there could be a complete data set available.
+      if(receive_start_detect >= 2) {
+        get_data();                              //If there are two start signatures detected there could be a complete data set available.
+      }
     } else {                                                                //If there is no start signature detected.
       receive_byte_previous = receive_buffer[receive_buffer_counter];       //Safe the current received byte for the next loop.
       receive_buffer_counter ++;                                            //Increment the receive_buffer_counter variable.
-      if(receive_buffer_counter > 48)receive_buffer_counter = 0;            //Reset the receive_buffer_counter variable when it becomes larger than 38.
+      if(receive_buffer_counter > 48) {
+        receive_buffer_counter = 0;            //Reset the receive_buffer_counter variable when it becomes larger than 38.
+      }
     }
     digitalWrite(STM32_Board_LED, !digitalRead(STM32_Board_LED));
   }
@@ -175,7 +184,9 @@ void loop() {
 
   if(page == 0) {
     page_counter++;
-    if (page_counter % 200 == 0) oled.clear();
+    if (page_counter % 200 == 0) {
+      oled.clear();
+    }
     
     if (page_counter < 200) {
       if(flight_mode <= 3){
@@ -187,23 +198,34 @@ void loop() {
         oled.print("R");
         oled.print(flight_mode - 4);
       }
+      // 显示错误编号
       oled.print("E");
       oled.print(error);
-  
+
+      // 显示电压
       oled.setCursor(ROW(5), LINE(1));
       if(battery_voltage < 10)
         oled.print("0");
       oled.print(battery_voltage, 1);
       oled.print("V");
-  
+
+      // 显示海拔高度
       oled.setCursor(ROW(12)-3, LINE(1));
-      if(altitude_meters < 0)oled.print("-");
-      else oled.print("+");
-      if(altitude_meters < 100)oled.print("0");
-      if(altitude_meters < 10)oled.print("0");
+      if(altitude_meters < 0) {
+        oled.print("-");
+      } else {
+        oled.print("+");
+      }
+      if(altitude_meters < 100) {
+        oled.print("0");
+      }
+      if(altitude_meters < 10) {
+        oled.print("0");
+      }
       oled.print(abs(altitude_meters));
       oled.print("m");
-  
+
+      // 显示卫星数量
       oled.setCursor(ROW(0), LINE(2));
       if(fix_type == 3) 
         oled.print("S");
@@ -212,7 +234,8 @@ void loop() {
       if(number_used_sats < 10) 
         oled.print("0");
       oled.print(number_used_sats);
-  
+
+      // 显示开机时间
       oled.setCursor(ROW(5), LINE(2));
       if(minutes < 10)
         oled.print("0");
@@ -221,7 +244,8 @@ void loop() {
       if(seconds < 10)
         oled.print("0");
       oled.print(seconds);
-  
+
+      // 显示航向
       oled.setCursor(ROW(12)-3, LINE(2));
       oled.print("H");
       if(actual_compass_heading < 100)
@@ -233,7 +257,8 @@ void loop() {
         oled.print("L");
       else
         oled.print((char)223);
-  
+
+      // 横滚角
       oled.setCursor(ROW(0), LINE(3)+3);
       oled.print("Roll: ");
       if(roll_angle >= 0)
@@ -244,6 +269,8 @@ void loop() {
         oled.print("0");
       oled.print(abs(roll_angle));
       oled.setCursor(ROW(0), LINE(4)+6);
+
+      // 俯仰角
       oled.print("Pitch: ");
       if(pitch_angle >= 0)
         oled.print("+");
@@ -253,17 +280,26 @@ void loop() {
         oled.print("0");
       oled.print(abs(pitch_angle));
     } 
-    
+
+    // 显示最高海拔、经纬度
     if (page_counter >= 200 && page_counter < 400) {
       oled.setCursor(ROW(0), LINE(1));
       oled.print("Max altitude:");
       oled.setCursor(ROW(0), LINE(2));
-      if(max_altitude_meters < 100)oled.print("0");
-      if(max_altitude_meters < 10)oled.print("0");
+      if(max_altitude_meters < 100) {
+        oled.print("0");
+      }
+      if(max_altitude_meters < 10) {
+        oled.print("0");
+      }
       oled.print(max_altitude_meters);
       oled.print("m  mem:");
-      if(max_altitude_from_eeprom < 100)oled.print("0");
-      if(max_altitude_from_eeprom < 10)oled.print("0");
+      if(max_altitude_from_eeprom < 100) {
+        oled.print("0");
+      }
+      if(max_altitude_from_eeprom < 10) {
+        oled.print("0");
+      }
       oled.print(max_altitude_from_eeprom);
       oled.print("m");
       
@@ -276,44 +312,68 @@ void loop() {
     }
 
     if (page_counter >= 400 && page_counter < 600) {
+      // 起飞油门
       oled.setCursor(ROW(0), LINE(1));
       oled.print("Take-off thr:");
       oled.print(takeoff_throttle); 
 
+      // 当前PID参数
       oled.setCursor(ROW(0), LINE(2)+3);
       oled.print("1:");
-      if(adjustable_setting_1 < 10)oled.print("0");
+      if(adjustable_setting_1 < 10) {
+        oled.print("0");
+      }
       oled.print(adjustable_setting_1);
+      
       oled.setCursor(ROW(0), LINE(3)+6);
       oled.print("2:");
-      if(adjustable_setting_2 < 10)oled.print("0");
+      if(adjustable_setting_2 < 10) {
+        oled.print("0");
+      }
+      
       oled.print(adjustable_setting_2);
       oled.setCursor(ROW(0), LINE(4)+9);
       oled.print("3:");
-      if(adjustable_setting_3 < 10)oled.print("0");
+      if(adjustable_setting_3 < 10) {
+        oled.print("0");
+      }
       oled.print(adjustable_setting_3);
     }
 
-//    if (page_counter >= 600 && page_counter < 800) {
-//      oled.setCursor(ROW(0), LINE(1));
-//      oled.print("Tot flight time");
-//      oled.setCursor(ROW(0), LINE(2));
-//      hours_flight_time = flight_time_from_eeprom/3600;
-//      minutes_flight_time = (flight_time_from_eeprom - (hours_flight_time*3600))/60;
-//      seconds_flight_time = flight_time_from_eeprom - (hours_flight_time*3600) - (minutes_flight_time*60);
-//      if(hours_flight_time < 10)oled.print("0");
-//      oled.print(hours_flight_time);
-//      oled.print(":");
-//      if(minutes_flight_time < 10)oled.print("0");
-//      oled.print(minutes_flight_time);
-//      oled.print(":");
-//      if(seconds_flight_time < 10)oled.print("0");
-//      oled.print(seconds_flight_time);
-//    }
+    if (page_counter >= 600 && page_counter < 800) {
+      // 总飞行时间
+      oled.setCursor(ROW(0), LINE(1));
+      oled.print("Tot flight time");
+      oled.setCursor(ROW(0), LINE(2));
+      hours_flight_time = flight_time_from_eeprom/3600;
+      minutes_flight_time = (flight_time_from_eeprom - (hours_flight_time*3600))/60;
+      seconds_flight_time = flight_time_from_eeprom - (hours_flight_time*3600) - (minutes_flight_time*60);
+      if(hours_flight_time < 10)oled.print("0");
+      oled.print(hours_flight_time);
+      oled.print(":");
+      if(minutes_flight_time < 10)oled.print("0");
+      oled.print(minutes_flight_time);
+      oled.print(":");
+      if(seconds_flight_time < 10)oled.print("0");
+      oled.print(seconds_flight_time);
+
+      // 最大速度
+      oled.setCursor(ROW(0), LINE(3)+3);
+      oled.print("Speed     Max");
+      oled.setCursor(ROW(0), LINE(4)+3);
+      if(speed_kmph < 100) oled.print("0");
+      if(speed_kmph < 10) oled.print("0");
+      oled.print(speed_kmph);
+      oled.print("kph    ");
+      if(max_speed < 100) oled.print("0");
+      if(max_speed < 10) oled.print("0");
+      oled.print(max_speed);
+      oled.print("kph");
+    }
     
-    if (page_counter > 600){
-      oled.clear();
+    if (page_counter > 800){
       page_counter = 0;
+      oled.clear();
     }
 
     oled.sendBuffer();
@@ -488,15 +548,17 @@ void loop() {
 //  }
 
   if(page == 100){
+    // 丢失遥测提示
     oled.setCursor(ROW(0), LINE(1));
     oled.print(" Lost telemetry");
     oled.setCursor(ROW(0), LINE(2));
     oled.print("   connection!"); 
     oled.sendBuffer();
     digitalWrite(STM32_Board_LED, HIGH);
-//    delay(1000);  
   }
+  
   if(page > 100) {
+    // 错误警告提示
     oled.setCursor(ROW(0), LINE(1));
     oled.print("Error:");
     oled.print(error);
@@ -537,6 +599,9 @@ void loop() {
   }
 }
 
+/**
+ * 解析数据
+ */
 void get_data(void) {
   check_byte = 0;                                                                         //Reset the check_byte variabel.
   for(temp_byte = 0; temp_byte <= 30; temp_byte++) {
