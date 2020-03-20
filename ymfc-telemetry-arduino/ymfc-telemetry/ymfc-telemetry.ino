@@ -149,7 +149,7 @@ void loop() {
   }
 
   while(SERIAL_PORT.available()) {                                              //If there are bytes available.      
-    receive_buffer[receive_buffer_counter] = SERIAL_PORT.read();                //Load them in the received_buffer array.
+    receive_buffer[receive_buffer_counter] = char(SERIAL_PORT.read());          //Load them in the received_buffer array.
     //Search for the start signature in the received data stream.
     if(receive_byte_previous == 'J' && receive_buffer[receive_buffer_counter] == 'B') {
       receive_buffer_counter = 0;                                           //Reset the receive_buffer_counter counter if the start signature if found.
