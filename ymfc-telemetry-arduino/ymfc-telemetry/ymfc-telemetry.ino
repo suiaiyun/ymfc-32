@@ -539,8 +539,6 @@ void loop() {
 
 void get_data(void) {
   check_byte = 0;                                                                         //Reset the check_byte variabel.
-  check_byte ^= 'J';
-  check_byte ^= 'B';
   for(temp_byte = 0; temp_byte <= 30; temp_byte++) {
     check_byte ^= receive_buffer[temp_byte];  //Calculate the check_byte.
   }
