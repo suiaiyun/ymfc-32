@@ -86,15 +86,19 @@ void send_telemetry_data(void) {
   //Send a start bit first.
   if (telemetry_loop_counter <= 34) {
     check_byte ^= telemetry_send_byte;
-    GPIOB_BASE->BSRR = 0b1 << 16;                                                             //Reset output PB0 to 0 to create a start bit.
-    delayMicroseconds(104);                                                                   //Delay 104us (1s/9600bps)
+    GPIOB_BASE->BSRR = 0x01 << 16;                                                             //Reset output PB0 to 0 to create a start bit.
+    delayMicroseconds(17);                                                                   //Delay 104us (1s/9600bps)
     for (telemetry_bit_counter = 0; telemetry_bit_counter < 8; telemetry_bit_counter ++) {    //Create a loop fore every bit in the
-      if (telemetry_send_byte >> telemetry_bit_counter & 0b1) GPIOB_BASE->BSRR = 0b1 << 0;    //If the specific bit is set, set output PB0 to 1;
-      else GPIOB_BASE->BSRR = 0b1 << 16;                                                      //If the specific bit is not set, reset output PB0 to 0;
-      delayMicroseconds(104);                                                                 //Delay 104us (1s/9600bps)
+      if (telemetry_send_byte >> telemetry_bit_counter & 0x01) {
+        GPIOB_BASE->BSRR = 0x01 << 0;    //If the specific bit is set, set output PB0 to 1;
+      }
+      else {
+        GPIOB_BASE->BSRR = 0x01 << 16;                                                      //If the specific bit is not set, reset output PB0 to 0;
+      }
+      delayMicroseconds(17);                                                                 //Delay 104us (1s/9600bps)
     }
     //Send a stop bit
-    GPIOB_BASE->BSRR = 0b1 << 0;                                                              //Set output PB0 to 1;
-    delayMicroseconds(104);
+    GPIOB_BASE->BSRR = 0x01 << 0;                                                              //Set output PB0 to 1;
+    delayMicroseconds(17); 
   }
 }

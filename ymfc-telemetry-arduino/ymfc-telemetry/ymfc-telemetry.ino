@@ -14,6 +14,7 @@
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C oled(U8G2_R0, PB6, PB7, U8X8_PIN_NONE);
 
+uint8_t receive_byte;
 uint8_t receive_buffer[50], receive_buffer_counter, receive_byte_previous, receive_start_detect;
 uint8_t check_byte, temp_byte;
 uint8_t error, alarm_sound, flight_mode;
@@ -53,7 +54,8 @@ void setup() {
   EEPROM.PageBase1 = 0x801F800;
   EEPROM.PageSize  = 0x400;
 
-  SERIAL_PORT.begin(9600);
+  //Serial1.begin(9600);
+  SERIAL_PORT.begin(115200);
 
   oled.begin();
   oled.enableUTF8Print();
@@ -154,7 +156,9 @@ void loop() {
   }
 
   while (SERIAL_PORT.available()) {                                             //If there are bytes available.
-    receive_buffer[receive_buffer_counter] = char(SERIAL_PORT.read());                //Load them in the received_buffer array.
+    receive_buffer[receive_buffer_counter] = (char)SERIAL_PORT.read();                //Load them in the received_buffer array.
+    
+    
     //Search for the start signature in the received data stream.
     if (receive_byte_previous == 'J' && receive_buffer[receive_buffer_counter] == 'B') {
       receive_buffer_counter = 0;                                           //Reset the receive_buffer_counter counter if the start signature if found.
@@ -255,8 +259,8 @@ void loop() {
       oled.print(actual_compass_heading);
       if (heading_lock)
         oled.print("L");
-      else
-        oled.print((char)223);
+//      else
+//        oled.print((char)223);
 
       // 横滚角
       oled.setCursor(ROW(0), LINE(3) + 3);
@@ -314,7 +318,7 @@ void loop() {
     if (page_counter >= 400 && page_counter < 600) {
       // 起飞油门
       oled.setCursor(ROW(0), LINE(1));
-      oled.print("Take-off thr:");
+      oled.print("Takeoff thr:");
       oled.print(takeoff_throttle);
 
       // 当前PID参数
