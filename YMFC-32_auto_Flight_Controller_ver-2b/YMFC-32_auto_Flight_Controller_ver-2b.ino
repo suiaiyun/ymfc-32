@@ -25,9 +25,9 @@ TwoWire HWire (2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float pid_p_gain_roll = 1.3;               //Gain setting for the pitch and roll P-controller (default = 1.3).
-float pid_i_gain_roll = 0.04;              //Gain setting for the pitch and roll I-controller (default = 0.04).
-float pid_d_gain_roll = 18.0;              //Gain setting for the pitch and roll D-controller (default = 18.0).
+float pid_p_gain_roll = 1.45;               //Gain setting for the pitch and roll P-controller (default = 1.3).
+float pid_i_gain_roll = 0.06;              //Gain setting for the pitch and roll I-controller (default = 0.04).
+float pid_d_gain_roll = 18.2;              //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
@@ -45,8 +45,8 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 //Increase this value when the quadcopter drops due to a lower battery voltage during a non altitude hold flight.
 float battery_compensation = 40.0;
 
-float pid_p_gain_altitude = 1.4;           //Gain setting for the altitude P-controller (default = 1.4).
-float pid_i_gain_altitude = 0.2;           //Gain setting for the altitude I-controller (default = 0.2).
+float pid_p_gain_altitude = 1.5;           //Gain setting for the altitude P-controller (default = 1.4).
+float pid_i_gain_altitude = 0.3;           //Gain setting for the altitude I-controller (default = 0.2).
 float pid_d_gain_altitude = 0.75;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
@@ -67,9 +67,9 @@ float low_battery_warning = 10.5;          //Set the battery warning at 10.5V (d
 #define STM32_board_LED PC13               //Change PC13 if the LED on the STM32 is connected to another output.
 
 //Tuning parameters/settings is explained in this video: https://youtu.be/ys-YpOaA2ME
-#define variable_1_to_adjust dummy_float   //Change dummy_float to any setting that you want to tune.
-#define variable_2_to_adjust dummy_float   //Change dummy_float to any setting that you want to tune.
-#define variable_3_to_adjust dummy_float   //Change dummy_float to any setting that you want to tune.
+#define variable_1_to_adjust pid_p_gain_altitude   //Change dummy_float to any setting that you want to tune.
+#define variable_2_to_adjust pid_i_gain_altitude   //Change dummy_float to any setting that you want to tune.
+#define variable_3_to_adjust pid_d_gain_altitude   //Change dummy_float to any setting that you want to tune.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Declaring global variables

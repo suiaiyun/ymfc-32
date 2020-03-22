@@ -406,7 +406,7 @@ void loop() {
     oled.sendBuffer();
   }
 
-  if (last_receive + 3000 < millis() && receive_start_detect && telemetry_lost == 0 && key_press_timer < 200) {
+  if (last_receive + 9000 < millis() && receive_start_detect && telemetry_lost == 0 && key_press_timer < 200) {
     telemetry_lost = 1;
     oled.clear();
     receive_start_detect = 0;

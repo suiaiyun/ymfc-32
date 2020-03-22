@@ -73,4 +73,3 @@ void start_stop_takeoff(void) {
     }
   }
 }
-
