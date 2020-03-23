@@ -25,7 +25,7 @@ TwoWire HWire (2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float pid_p_gain_roll = 1.45;               //Gain setting for the pitch and roll P-controller (default = 1.3).
+float pid_p_gain_roll = 1.45;              //Gain setting for the pitch and roll P-controller (default = 1.3).
 float pid_i_gain_roll = 0.06;              //Gain setting for the pitch and roll I-controller (default = 0.04).
 float pid_d_gain_roll = 18.2;              //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
@@ -53,14 +53,15 @@ int pid_max_altitude = 400;                //Maximum output of the PID-controlle
 float gps_p_gain = 2.7;                    //Gain setting for the GPS P-controller (default = 2.7).
 float gps_d_gain = 6.5;                    //Gain setting for the GPS D-controller (default = 6.5).
 
-float declination = 0.0;                   //Set the declination between the magnetic and geographic north.
+//设置磁偏角(中国-山东-烟台) 
+float declination = -7.8;                  //Set the declination between the magnetic and geographic north (default = 0). 
 
 int16_t manual_takeoff_throttle = 1500;    //Enter the manual hover point when auto take-off detection is not desired (between 1400 and 1600).
 int16_t motor_idle_speed = 1100;           //Enter the minimum throttle pulse of the motors when they idle (between 1000 and 1200). 1170 for DJI
 
 uint8_t gyro_address = 0x68;               //The I2C address of the MPU-6050 is 0x68 in hexadecimal form.
 uint8_t MS5611_address = 0x77;             //The I2C address of the MS5611 barometer is 0x77 in hexadecimal form.
-uint8_t compass_address = 0x0D;            //The I2C address of the HMC5883L is 0x1E in hexadecimal form.
+uint8_t compass_address = 0x0D;            //The I2C address of the QMC5883L is 0x1E in hexadecimal form.
 
 float low_battery_warning = 10.5;          //Set the battery warning at 10.5V (default = 10.5V).
 
