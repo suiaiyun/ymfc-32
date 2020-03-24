@@ -25,9 +25,9 @@ TwoWire HWire (2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-float pid_p_gain_roll = 1.45;              //Gain setting for the pitch and roll P-controller (default = 1.3).
-float pid_i_gain_roll = 0.06;              //Gain setting for the pitch and roll I-controller (default = 0.04).
-float pid_d_gain_roll = 18.2;              //Gain setting for the pitch and roll D-controller (default = 18.0).
+float pid_p_gain_roll = 1.3;              //Gain setting for the pitch and roll P-controller (default = 1.3).
+float pid_i_gain_roll = 0.04;              //Gain setting for the pitch and roll I-controller (default = 0.04).
+float pid_d_gain_roll = 18.0;              //Gain setting for the pitch and roll D-controller (default = 18.0).
 int pid_max_roll = 400;                    //Maximum output of the PID-controller (+/-).
 
 float pid_p_gain_pitch = pid_p_gain_roll;  //Gain setting for the pitch P-controller.
@@ -45,8 +45,8 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 //Increase this value when the quadcopter drops due to a lower battery voltage during a non altitude hold flight.
 float battery_compensation = 40.0;
 
-float pid_p_gain_altitude = 1.5;           //Gain setting for the altitude P-controller (default = 1.4).
-float pid_i_gain_altitude = 0.3;           //Gain setting for the altitude I-controller (default = 0.2).
+float pid_p_gain_altitude = 1.4;           //Gain setting for the altitude P-controller (default = 1.4).
+float pid_i_gain_altitude = 0.2;           //Gain setting for the altitude I-controller (default = 0.2).
 float pid_d_gain_altitude = 0.75;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
@@ -56,7 +56,7 @@ float gps_d_gain = 6.5;                    //Gain setting for the GPS D-controll
 //设置磁偏角(中国-山东-烟台) 
 float declination = -7.8;                  //Set the declination between the magnetic and geographic north (default = 0). 
 
-int16_t manual_takeoff_throttle = 1500;    //Enter the manual hover point when auto take-off detection is not desired (between 1400 and 1600).
+int16_t manual_takeoff_throttle = 0;    //Enter the manual hover point when auto take-off detection is not desired (between 1400 and 1600).
 int16_t motor_idle_speed = 1100;           //Enter the minimum throttle pulse of the motors when they idle (between 1000 and 1200). 1170 for DJI
 
 uint8_t gyro_address = 0x68;               //The I2C address of the MPU-6050 is 0x68 in hexadecimal form.
