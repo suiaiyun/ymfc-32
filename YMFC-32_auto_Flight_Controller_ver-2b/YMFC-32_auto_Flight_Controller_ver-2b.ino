@@ -56,7 +56,7 @@ float gps_d_gain = 6.5;                    //Gain setting for the GPS D-controll
 //设置磁偏角(中国-山东-烟台) 
 float declination = -7.8;                  //Set the declination between the magnetic and geographic north (default = 0). 
 
-int16_t manual_takeoff_throttle = 0;    //Enter the manual hover point when auto take-off detection is not desired (between 1400 and 1600).
+int16_t manual_takeoff_throttle = 1500;    //Enter the manual hover point when auto take-off detection is not desired (between 1400 and 1600).
 int16_t motor_idle_speed = 1100;           //Enter the minimum throttle pulse of the motors when they idle (between 1000 and 1200). 1170 for DJI
 
 uint8_t gyro_address = 0x68;               //The I2C address of the MPU-6050 is 0x68 in hexadecimal form.
