@@ -123,9 +123,9 @@ void loop() {
   }
 
   if(button_store != -1 && key_press_timer < 200){
-    if(button_store < 300 && button_store > 200)page--; //Down
-    if(button_store < 150 && button_store > 50)page++; //Up
-    if(button_store < 700 && button_store > 600)page=0; //Select
+    if((button_store < 350 && button_store > 250) || (button_store < 500 && button_store > 350))page--; //Down
+    if((button_store < 150 && button_store > 100) || (button_store < 100 && button_store >= 0))page++; //Up
+    if(button_store < 800 && button_store > 700)page=0; //Select
     if(page < 0)page = 0;
     if(page > 6)page = 7;
     button_store = -1;
@@ -245,7 +245,7 @@ void loop() {
       lcd.setCursor(0, 1);
       lcd.print("Select = yes");
       while(button_store == -1)delay(10);
-      if(button_store < 700 && button_store > 600){
+      if(button_store < 800 && button_store > 700){
         while(analogRead(0) < 1000)delay(10);
         lcd.clear();
         lcd.setCursor(0, 0);
@@ -290,7 +290,7 @@ void loop() {
       lcd.setCursor(0, 1);
       lcd.print("Select = yes");
       while(button_store == -1)delay(10);
-      if(button_store < 700 && button_store > 600){
+      if(button_store < 800 && button_store > 700){
         while(analogRead(0) < 1000)delay(10);
         lcd.clear();
         lcd.setCursor(0, 0);
@@ -341,7 +341,7 @@ void loop() {
       lcd.setCursor(0, 1);
       lcd.print("Select = yes");
       while(button_store == -1)delay(10);
-      if(button_store < 700 && button_store > 600){
+      if(button_store < 800 && button_store > 700){
         while(analogRead(0) < 1000)delay(10);
         lcd.clear();
         lcd.setCursor(0, 0);
@@ -523,6 +523,3 @@ void get_data(void){
     }
   }
 }
-
-
-
