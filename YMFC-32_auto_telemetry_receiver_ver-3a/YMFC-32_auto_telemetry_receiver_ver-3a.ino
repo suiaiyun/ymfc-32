@@ -1,17 +1,9 @@
-///////////////////////////////////////////////////////////////////////////////////////
-//Terms of use
-///////////////////////////////////////////////////////////////////////////////////////
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//THE SOFTWARE.
-///////////////////////////////////////////////////////////////////////////////////////
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 
+// 定义蜂鸣器引脚
+#define BUZZER_PIN  2  
+#define ANALOG_PIN  0
 
 uint8_t receive_buffer[50], receive_buffer_counter, receive_byte_previous, receive_start_detect;
 uint8_t check_byte, temp_byte;
@@ -44,36 +36,44 @@ byte led;
 
 //SoftwareSerial TelemetrySerial(11, 12); // RX, TX
 
-// initialize the library with the numbers of the interface pins
+// 初始化lcd引脚
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
-void setup() {
-  //Let's setup a interrupt that will check the key inputs on the analog input A0.
-  TCCR2A = 0;                                                               //Make sure that the TCCR2A register is set to zero
-  TCCR2B = 0;                                                               //Make sure that the TCCR2A register is set to zero
-  TIMSK2 |= (1 << OCIE2A);                                                  //Set the interupt enable bit OCIE2A in the TIMSK2 register
-  TCCR2B |= (1 << CS22|1 << CS21|1 << CS20);                                //Set the CS20, CS21 and CS22 bit in the TCCRB register to set the prescaler to 1024
-  OCR2A = 249;                                                              //The compare register is set to 249 => 16ms / (1s / (16.000.000MHz / 1024)) - 1 = 249
-  TCCR2A |= (1 << WGM21);                                                   //Set counter 2 to CTC (clear timer on compare) mode
+/**
+ * 中断程序
+ */
+ISR(TIMER2_COMPA_vect) {
+  if(button_store == -1)button_store = analogRead(ANALOG_PIN);
+  if(button_store > 1000)button_store = -1;
+}
 
+void setup() {
+  // 设置一个中断来检查模拟输入A0上的键输入
+  TCCR2A = 0;                                                               // 设置TCCR2A寄存器为零
+  TCCR2B = 0;                                                               // 设置TCCR2B寄存器为零
+  TIMSK2 |= (1 << OCIE2A);                                                  // 在TIMSK2寄存器中设置中断启用位OCIE2A
+  TCCR2B |= (1 << CS22|1 << CS21|1 << CS20);                                // 将TCCRB寄存器中的CS20、CS21和CS22位设置为1024
+  OCR2A = 249;                                                              // 比较寄存器设置为249=>16ms/（1s/（16.000.000MHz/1024））-1=249
+  TCCR2A |= (1 << WGM21);                                                   // 将计数器2设置为CTC（比较时清除计时器）模式
 
   Serial.begin(9600);                                                       //Set the serial output to 9600bps.
-  pinMode(2, OUTPUT);                                                       //Set input 2 as output for the buzzer.
+  pinMode(BUZZER_PIN, OUTPUT);                                              //Set input 2 as output for the buzzer.
 
-  lcd.begin(16, 2);                                                         // set up the LCD's number of columns and rows.
-  // Print a welcome message to the LCD.
+  // 配置LCD屏幕宽度
+  lcd.begin(16, 2);
+  // 打印欢迎信息
   lcd.setCursor(4, 0);
   lcd.print("YMFC-32");
   lcd.setCursor(3, 1);
   lcd.print("telemetry");
-  //Create a signal to indicate the start of the program.
-  digitalWrite(2, HIGH);
+  // 蜂鸣器提示音
+  digitalWrite(BUZZER_PIN, HIGH);
   delay(10);
-  digitalWrite(2, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
   delay(50);
-  digitalWrite(2, HIGH);
+  digitalWrite(BUZZER_PIN, HIGH);
   delay(10);
-  digitalWrite(2, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
   delay(2500);
 
   button_store = -1;
@@ -85,6 +85,7 @@ void setup() {
   max_speed = max_speed_from_eeprom;
 }
 
+// 主循环
 void loop() {
   if(key_press_timer > 0){
     key_press_timer = 0;
@@ -92,25 +93,25 @@ void loop() {
   }
 
   if(button_store != -1){
-    while(analogRead(0) < 1000){
+    while(analogRead(ANALOG_PIN) < 1000){
       delay(10);
       if(key_press_timer < 200)key_press_timer ++;
       if(key_press_timer == 200){
-        digitalWrite(2, HIGH);
+        digitalWrite(BUZZER_PIN, HIGH);
         delay(10);
-        digitalWrite(2, LOW);
+        digitalWrite(BUZZER_PIN, LOW);
         delay(50);
-        digitalWrite(2, HIGH);
+        digitalWrite(BUZZER_PIN, HIGH);
         delay(10);
-        digitalWrite(2, LOW);
+        digitalWrite(BUZZER_PIN, LOW);
         delay(500);
 
       }
     }
     if(key_press_timer < 200){
-      digitalWrite(2, HIGH);
+      digitalWrite(BUZZER_PIN, HIGH);
       delay(10);
-      digitalWrite(2, LOW);
+      digitalWrite(BUZZER_PIN, LOW);
     }
   }
 
@@ -123,9 +124,9 @@ void loop() {
   }
 
   if(button_store != -1 && key_press_timer < 200){
-    if((button_store < 350 && button_store > 250) || (button_store < 500 && button_store > 350))page--; //Down
-    if((button_store < 150 && button_store > 100) || (button_store < 100 && button_store >= 0))page++; //Up
-    if(button_store < 800 && button_store > 700)page=0; //Select
+    if(button_store < 350 && button_store > 250) page--; // Down键
+    if(button_store < 150 && button_store > 100) page++; // Up键
+    if(button_store < 800 && button_store > 700) page=0; // Select键
     if(page < 0)page = 0;
     if(page > 6)page = 7;
     button_store = -1;
@@ -160,18 +161,24 @@ void loop() {
     flight_timer_start = 0;
   }
 
-  while(Serial.available()){                                                //If there are bytes available.      
-    receive_buffer[receive_buffer_counter] = Serial.read();                 //Load them in the received_buffer array.
-    //Search for the start signature in the received data stream.
+  while (Serial.available()) {
+    // 将接收的数据加载到接收的缓冲区数组中     
+    receive_buffer[receive_buffer_counter] = Serial.read();
+    // 在接收到的数据流中搜索开始签名
     if(receive_byte_previous == 'J' && receive_buffer[receive_buffer_counter] == 'B'){
-      receive_buffer_counter = 0;                                           //Reset the receive_buffer_counter counter if the start signature if found.
-      receive_start_detect ++;                                              //Increment the receive_start_detect to check for a full data stream reception.
-      if(receive_start_detect >= 2)get_data();                              //If there are two start signatures detected there could be a complete data set available.
-    }
-    else{                                                                   //If there is no start signature detected.
-      receive_byte_previous = receive_buffer[receive_buffer_counter];       //Safe the current received byte for the next loop.
-      receive_buffer_counter ++;                                            //Increment the receive_buffer_counter variable.
-      if(receive_buffer_counter > 48)receive_buffer_counter = 0;            //Reset the receive_buffer_counter variable when it becomes larger than 38.
+      // 如果找到起始签名，则重置接收缓冲区计数器
+      receive_buffer_counter = 0;
+      // 累加接收开始检测计数器，以检查是否接收到完整的数据流
+      receive_start_detect ++;
+      // 如果检测到两个启动签名，则可能有完整的数据集可用
+      if(receive_start_detect >= 2)get_data();
+    } else {
+      // 如果未检测到启动签名, 为下一个循环安全当前接收的字节
+      receive_byte_previous = receive_buffer[receive_buffer_counter];
+      // 累加接收缓冲区计数器变量
+      receive_buffer_counter ++;
+      // 当接收缓冲区计数器变量大于48时，将其重置
+      if(receive_buffer_counter > 48)receive_buffer_counter = 0;
     }
   }
 
@@ -246,7 +253,7 @@ void loop() {
       lcd.print("Select = yes");
       while(button_store == -1)delay(10);
       if(button_store < 800 && button_store > 700){
-        while(analogRead(0) < 1000)delay(10);
+        while(analogRead(ANALOG_PIN) < 1000)delay(10);
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Max spd is reset");
@@ -291,7 +298,7 @@ void loop() {
       lcd.print("Select = yes");
       while(button_store == -1)delay(10);
       if(button_store < 800 && button_store > 700){
-        while(analogRead(0) < 1000)delay(10);
+        while(analogRead(ANALOG_PIN) < 1000)delay(10);
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Max alt is reset");
@@ -342,7 +349,7 @@ void loop() {
       lcd.print("Select = yes");
       while(button_store == -1)delay(10);
       if(button_store < 800 && button_store > 700){
-        while(analogRead(0) < 1000)delay(10);
+        while(analogRead(ANALOG_PIN) < 1000)delay(10);
         lcd.clear();
         lcd.setCursor(0, 0);
         lcd.print("Timer is reset");
@@ -416,7 +423,7 @@ void loop() {
 
   }
 
-  if(last_receive + 3000 < millis() && receive_start_detect && telemetry_lost == 0 && key_press_timer < 200){
+  if(last_receive + 3000 < millis() && receive_start_detect && telemetry_lost == 0 && key_press_timer < 200) {
     telemetry_lost = 1;
     lcd.clear();
     receive_start_detect = 0;
@@ -434,39 +441,41 @@ void loop() {
   }
 
   if((telemetry_lost == 1 || alarm_sound == 1) && next_sound < millis()){
-    digitalWrite(2, HIGH);
+    digitalWrite(BUZZER_PIN, HIGH);
     delay(10);
-    digitalWrite(2, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
     delay(50);
-    digitalWrite(2, HIGH);
+    digitalWrite(BUZZER_PIN, HIGH);
     delay(10);
-    digitalWrite(2, LOW);
+    digitalWrite(BUZZER_PIN, LOW);
     next_sound = millis() + 1000;
   }
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Interrupt routine TIMER2_COMPA_vect
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ISR(TIMER2_COMPA_vect){
-  if(button_store == -1)button_store = analogRead(0);
-  if(button_store > 1000)button_store = -1;
-}
-
-//When there are two start signatures received the received data between them can be tested to se if it is a valid data stream.
-void get_data(void){
-  check_byte = 0;                                                                         //Reset the check_byte variabel.
-  for(temp_byte=0;temp_byte <= 30; temp_byte ++)check_byte ^= receive_buffer[temp_byte];  //Calculate the check_byte.
-  if(check_byte == receive_buffer[31]){                                                   //If the calculated check_byte and the received check_byte are the same.
-    if(telemetry_lost > 0){                                                               //If the telemetry signal was lost.
-      telemetry_lost = 0;                                                                 //Reset the telemetry lost signal because a valid data stream is received.
-      page = 0;                                                                           //Start at page 1.
+/**
+ * 当接收到两个起始签名时，如果它们之间的
+ * 接收数据是有效的数据流，则开始解析
+ */
+void get_data(void)
+{
+  // 重置检查字节变量
+  check_byte = 0;
+  // 计算校验字节
+  for(temp_byte = 0; temp_byte <= 30; temp_byte++)
+    check_byte ^= receive_buffer[temp_byte];
+  // 第32个字节存放的是校验值
+  if(check_byte == receive_buffer[31]){
+    // 如果遥测信号丢失, 重新设置遥测丢失信号，因为接收到有效的数据流
+    if(telemetry_lost > 0){
+      telemetry_lost = 0;
+      page = 0;
     }
-    last_receive = millis();                                                              //Remember when this reception has arived.
-    receive_start_detect = 1;                                                             //Reset the receive_start_detect variable to 1.
-    //In the following lines the different variables are restored from the valid data stream.
-    //The name of the variables are the same as in the YMFC-32 flight controller program.
+    // 记录最后一次接收数据的时间
+    last_receive = millis();
+    // 将接收启动检测变量重置为 1
+    receive_start_detect = 1;
+    
+    // 在下面的行中，从有效的数据流还原不同的变量。变量的名称与YMFC-32飞行控制器程序中的相同
     error = receive_buffer[0];
     flight_mode = receive_buffer[1];
     battery_voltage = (float)receive_buffer[2]/10.0;
@@ -487,7 +496,8 @@ void get_data(void){
     adjustable_setting_2 = (float)(receive_buffer[27] | receive_buffer[28] << 8)/100.0;
     adjustable_setting_3 = (float)(receive_buffer[29] | receive_buffer[30] << 8)/100.0;
 
-    if(number_used_sats >= 4){
+    if (number_used_sats >= 4)
+    {
       lat_distance = abs(l_lat_gps - l_lat_gps_previous);
       lat_distance *= cos(((float)l_lat_gps/1000000.0) * 0.017453);
 
@@ -517,9 +527,6 @@ void get_data(void){
 
       l_lat_gps_previous = l_lat_gps;
       l_lon_gps_previous = l_lon_gps;
-
-
-
     }
   }
 }
