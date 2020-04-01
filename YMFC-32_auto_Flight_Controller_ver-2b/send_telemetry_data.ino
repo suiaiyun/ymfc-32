@@ -82,23 +82,27 @@ void send_telemetry_data(void) {
   //After 125 loops the telemetry_loop_counter variable is reset. This way the telemetry data is send every half second.
   if (telemetry_loop_counter == 125)telemetry_loop_counter = 0;                             //After 125 loops reset the telemetry_loop_counter variable
 
-  //Send the telemetry_send_byte via the serial protocol via ouput PB0.
-  //Send a start bit first.
+  // 使用PB0通过串行协议发送遥测数据
   if (telemetry_loop_counter <= 34) {
+    // 计算校验值
     check_byte ^= telemetry_send_byte;
-    GPIOB_BASE->BSRR = 0x01 << 16;                                                             //Reset output PB0 to 0 to create a start bit.
-    delayMicroseconds(17);                                                                   //Delay 104us (1s/9600bps)
-    for (telemetry_bit_counter = 0; telemetry_bit_counter < 8; telemetry_bit_counter ++) {    //Create a loop fore every bit in the
-      if (telemetry_send_byte >> telemetry_bit_counter & 0x01) {
-        GPIOB_BASE->BSRR = 0x01 << 0;    //If the specific bit is set, set output PB0 to 1;
+    // PB0拉低，发送起始位
+    GPIOB_BASE->BSRR = 0b1 << 16;
+    // 延时104微秒，(1s/9600bps)
+    delayMicroseconds(104 * MCU_DELAY_MICRO);
+    // 发送数据
+    for (telemetry_bit_counter = 0; telemetry_bit_counter < 8; telemetry_bit_counter ++) {
+      if (telemetry_send_byte >> telemetry_bit_counter & 0b1) {
+        // 设置高电平
+        GPIOB_BASE->BSRR = 0b1 << 0;
+      } else {
+        // 设置低电平
+        GPIOB_BASE->BSRR = 0b1 << 16;
       }
-      else {
-        GPIOB_BASE->BSRR = 0x01 << 16;                                                      //If the specific bit is not set, reset output PB0 to 0;
-      }
-      delayMicroseconds(17);                                                                 //Delay 104us (1s/9600bps)
+      // 延时104微秒，(1s/9600bps)
+      delayMicroseconds(104 * MCU_DELAY_MICRO);
     }
-    //Send a stop bit
-    GPIOB_BASE->BSRR = 0x01 << 0;                                                              //Set output PB0 to 1;
-    delayMicroseconds(17); 
+    // 发送停止位，设置PB0为高电平
+    GPIOB_BASE->BSRR = 0b1 << 0;
   }
 }
