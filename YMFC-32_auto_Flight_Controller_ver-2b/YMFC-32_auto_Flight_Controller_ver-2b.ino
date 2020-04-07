@@ -203,92 +203,121 @@ void setup() {
 
   pinMode(PB0, OUTPUT);                                         //Set PB0 as output for telemetry TX.
 
-  //EEPROM emulation setup
+  // 模拟EEPROM设置
   EEPROM.PageBase0 = 0x801F000;
   EEPROM.PageBase1 = 0x801F800;
   EEPROM.PageSize  = 0x400;
 
   //Serial.begin(9600);                                        //Set the serial output to 57600 kbps. (for debugging only)
   delay(250);                                                 //Give the serial port some time to start to prevent data loss.
+  
+  /* 设置接收器输入和ESC输出的计时器 */
+  timer_setup();
+  delay(50);
 
-  timer_setup();                                                //Setup the timers for the receiver inputs and ESC's output.
-  delay(50);                                                    //Give the timers some time to start.
+  /* 设置GPS模块的波特率和输出刷新率 */
+  gps_setup();
 
-  gps_setup();                                                  //Set the baud rate and output refreshrate of the GPS module.
-
-  //Check if the MPU-6050 is responding.
-  HWire.begin();                                                //Start the I2C as master
-  HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
-  error = HWire.endTransmission();                              //End the transmission and register the exit status.
-  while (error != 0) {                                          //Stay in this loop because the MPU-6050 did not responde.
-    error = 1;                                                  //Set the error status to 1.
-    error_signal();                                             //Show the error via the red LED.
-    delay(4);                                                   //Simulate a 250Hz refresch rate as like the main loop.
+  /**
+   * 检查MPU-6050是否响应
+   */
+  HWire.begin();
+  HWire.beginTransmission(gyro_address);
+  error = HWire.endTransmission();
+  /* 未检测到电子罗盘则陷入死循环 */
+  while (error != 0) {
+    /* 将错误状态设置为 1 */
+    error = 1;
+    /* 红色LED闪 1 下 */
+    error_signal();
+    /* 保持250Hz频率 */
+    delay(4);
   }
 
-  //Check if the compass is responding.
-  HWire.beginTransmission(compass_address);                     //Start communication with the HMC5883L.
-  error = HWire.endTransmission();                              //End the transmission and register the exit status.
-  while (error != 0) {                                          //Stay in this loop because the HMC5883L did not responde.
-    error = 2;                                                  //Set the error status to 2.
-    error_signal();                                             //Show the error via the red LED.
-    delay(4);                                                   //Simulate a 250Hz refresch rate as like the main loop.
+  /**
+   * 检测电子罗盘是否响应
+   */
+  HWire.beginTransmission(compass_address);
+  error = HWire.endTransmission();
+  while (error != 0) {
+    error = 2;
+    error_signal();
+    delay(4);
   }
 
-  //Check if the MS5611 barometer is responding.
-  HWire.beginTransmission(MS5611_address);                      //Start communication with the MS5611.
-  error = HWire.endTransmission();                              //End the transmission and register the exit status.
-  while (error != 0) {                                          //Stay in this loop because the MS5611 did not responde.
-    error = 3;                                                  //Set the error status to 2.
-    error_signal();                                             //Show the error via the red LED.
-    delay(4);                                                   //Simulate a 250Hz refresch rate as like the main loop.
+  /**
+   * 检查MS5611气压计是否响应
+   */
+  HWire.beginTransmission(MS5611_address);
+  error = HWire.endTransmission();
+  while (error != 0) {
+    error = 3;
+    error_signal();
+    delay(4);
   }
 
-  gyro_setup();                                                 //Initiallize the gyro and set the correct registers.
-  setup_compass();                                              //Initiallize the compass and set the correct registers.
-  read_compass();                                               //Read and calculate the compass data.
-  angle_yaw = actual_compass_heading;                           //Set the initial compass heading.
+  /* 初始化陀螺仪并设置正确的寄存器 */
+  gyro_setup();
+  /* 初始化指南针并设置正确的寄存器 */
+  setup_compass();
+  /* 读取并计算罗盘数据 */
+  read_compass();
+  /* 设置初始罗盘航向 */
+  angle_yaw = actual_compass_heading;
 
-  //Create a 5 second delay before calibration.
-  for (count_var = 0; count_var < 1250; count_var++) {          //1250 loops of 4 microseconds = 5 seconds.
-    if (count_var % 125 == 0) {                                 //Every 125 loops (500ms).
-      digitalWrite(PB4, !digitalRead(PB4));                     //Change the led status.
+  /**
+   * 在校准前创建5秒延迟
+   * 1250 x 4毫秒 = 5秒
+   */
+  for (count_var = 0; count_var < 1250; count_var++) {
+    if (count_var % 125 == 0) {
+      digitalWrite(PB4, !digitalRead(PB4));
     }
-    delay(4);                                                   //Simulate a 250Hz refresch rate as like the main loop.
+    /* 保持250Hz刷新率 */
+    delay(4);
   }
-  count_var = 0;                                                //Set start back to 0.
-  calibrate_gyro();                                             //Calibrate the gyro offset.
+  /* 将“开始”设置回0 */
+  count_var = 0;
+  /* 校准陀螺仪 */
+  calibrate_gyro();
 
-  //Wait until the receiver is active.
+  /**
+   * 等到接收器激活
+   */
   while (channel_1 < 990 || channel_2 < 990 || channel_3 < 990 || channel_4 < 990)  {
-    error = 4;                                                  //Set the error status to 4.
-    error_signal();                                             //Show the error via the red LED.
-    delay(4);                                                   //Delay 4ms to simulate a 250Hz loop
+    error = 4;
+    error_signal();
+    delay(4);
   }
-  error = 0;                                                    //Reset the error status to 0.
+  error = 0;
 
 
-  //When everything is done, turn off the led.
-  red_led(LOW);                                                 //Set output PB4 low.
+  /* 当一切都完成后,关掉led */
+  red_led(LOW);
 
-  //Load the battery voltage to the battery_voltage variable.
-  //The STM32 uses a 12 bit analog to digital converter.
-  //analogRead => 0 = 0V ..... 4095 = 3.3V
-  //The voltage divider (1k & 10k) is 1:11.
-  //analogRead => 0 = 0V ..... 4095 = 36.3V
-  //36.3 / 4095 = 112.81.
-  //The variable battery_voltage holds 1050 if the battery voltage is 10.5V.
+  /**
+   * 将蓄电池电压加载到蓄电池电压变量。
+   * STM32使用12位模数转换器。
+   * analogRead=>0=0V。。。。。4095=3.3伏
+   * 分压器（1k和10k）为1:11。
+   * analogRead=>0=0V。。。。。4095=36.3伏
+   * 36.3/4095=112.81。
+   * 如果蓄电池电压为10.5V，可变蓄电池电压保持1050
+  */
   battery_voltage = (float)analogRead(4) / 112.81;
 
-  //For calculating the pressure the 6 calibration values need to be polled from the MS5611.
-  //These 2 byte values are stored in the memory location 0xA2 and up.
+  /**
+   * 为了计算压力，需要从MS5611中查询6个校准值。
+   * 这两个字节的值存储在内存位置0xA2及以上
+   */ 
   for (start = 1; start <= 6; start++) {
-    HWire.beginTransmission(MS5611_address);                    //Start communication with the MPU-6050.
-    HWire.write(0xA0 + start * 2);                              //Send the address that we want to read.
-    HWire.endTransmission();                                    //End the transmission.
+    HWire.beginTransmission(MS5611_address);
+    HWire.write(0xA0 + start * 2);
+    HWire.endTransmission();
 
-    HWire.requestFrom(MS5611_address, 2);                       //Request 2 bytes from the MS5611.
-    C[start] = HWire.read() << 8 | HWire.read();                //Add the low and high byte to the C[x] calibration variable.
+    HWire.requestFrom(MS5611_address, 2);
+    /* 将低字节和高字节添加到C[x]校准变量 */
+    C[start] = HWire.read() << 8 | HWire.read();
   }
 
   OFF_C2 = C[2] * pow(2, 16);                                   //This value is pre-calculated to offload the main program loop.
@@ -428,10 +457,12 @@ void loop() {
   channel_1_base = channel_1;                                                      //Normally channel_1 is the pid_roll_setpoint input.
   channel_2_base = channel_2;                                                      //Normally channel_2 is the pid_pitch_setpoint input.
   gps_man_adjust_heading = angle_yaw;                                              //
-  //When the heading_lock mode is activated the roll and pitch pid setpoints are heading dependent.
-  //At startup the heading is registerd in the variable course_lock_heading.
-  //First the course deviation is calculated between the current heading and the course_lock_heading.
-  //Based on this deviation the pitch and roll controls are calculated so the responce is the same as on startup.
+  /**
+   * When the heading_lock mode is activated the roll and pitch pid setpoints are heading dependent.
+   * At startup the heading is registerd in the variable course_lock_heading.
+   * First the course deviation is calculated between the current heading and the course_lock_heading.
+   * Based on this deviation the pitch and roll controls are calculated so the responce is the same as on startup.
+   */ 
   if (heading_lock == 1) {
     heading_lock_course_deviation = course_deviation(angle_yaw, course_lock_heading);
     channel_1_base = 1500 + ((float)(channel_1 - 1500) * cos(heading_lock_course_deviation * 0.017453)) + ((float)(channel_2 - 1500) * cos((heading_lock_course_deviation - 90) * 0.017453));
@@ -521,12 +552,12 @@ void loop() {
 
   send_telemetry_data();                                                           //Send telemetry data to the ground station.
 
-  //! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-  //Because of the angle calculation the loop time is getting very important. If the loop time is
-  //longer or shorter than 4000us the angle calculation is off. If you modify the code make sure
-  //that the loop time is still 4000us and no longer! More information can be found on
-  //the Q&A page:
-  //! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
+  /**
+   * Because of the angle calculation the loop time is getting very important. If the loop time is
+   * longer or shorter than 4000us the angle calculation is off. If you modify the code make sure
+   * that the loop time is still 4000us and no longer! More information can be found on
+   * the Q&A page:
+   */
 
   if (micros() - loop_timer > 4050)error = 2;                                      //Output an error if the loop time exceeds 4050us.
   while (micros() - loop_timer < 4000);                                            //We wait until 4000us are passed.
