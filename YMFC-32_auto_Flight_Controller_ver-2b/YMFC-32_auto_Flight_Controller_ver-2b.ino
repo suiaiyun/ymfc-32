@@ -21,8 +21,6 @@ TwoWire HWire (2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
 
 // 磁力计安装方向: true 正向安装, false 反向安装
 #define COMPASS_INSTALL_DIRECTION true
-// delayMicroseconds 函数延时补偿 (1|2)
-#define MCU_DELAY_MICRO 2
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
@@ -65,7 +63,7 @@ uint8_t gyro_address = 0x68;               //The I2C address of the MPU-6050 is 
 uint8_t MS5611_address = 0x77;             //The I2C address of the MS5611 barometer is 0x77 in hexadecimal form.
 uint8_t compass_address = 0x0D;            //The I2C address of the QMC5883L is 0x1E in hexadecimal form.
 
-float low_battery_warning = 10.4;          //Set the battery warning at 10.5V (default = 10.5V).
+float low_battery_warning = 10.5;          //Set the battery warning at 10.5V (default = 10.5V).
 
 #define STM32_board_LED PC13               //Change PC13 if the LED on the STM32 is connected to another output.
 
@@ -521,7 +519,7 @@ void loop() {
   TIMER4_BASE->CCR4 = esc_4;                                                       //Set the throttle receiver input pulse to the ESC 4 output pulse.
   TIMER4_BASE->CNT = 5000;                                                         //This will reset timer 4 and the ESC pulses are directly created.
 
-  send_telemetry_data();                                                           //Send telemetry data to the ground station.
+  //send_telemetry_data();                                                           //Send telemetry data to the ground station.
 
   //! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
   //Because of the angle calculation the loop time is getting very important. If the loop time is

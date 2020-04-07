@@ -89,7 +89,7 @@ void send_telemetry_data(void) {
     // PB0拉低，发送起始位
     GPIOB_BASE->BSRR = 0b1 << 16;
     // 延时104微秒，(1s/9600bps)
-    delayMicroseconds(104 * MCU_DELAY_MICRO);
+    delayMicroseconds(104);
     // 发送数据
     for (telemetry_bit_counter = 0; telemetry_bit_counter < 8; telemetry_bit_counter ++) {
       if (telemetry_send_byte >> telemetry_bit_counter & 0b1) {
@@ -100,7 +100,7 @@ void send_telemetry_data(void) {
         GPIOB_BASE->BSRR = 0b1 << 16;
       }
       // 延时104微秒，(1s/9600bps)
-      delayMicroseconds(104 * MCU_DELAY_MICRO);
+      delayMicroseconds(104);
     }
     // 发送停止位，设置PB0为高电平
     GPIOB_BASE->BSRR = 0b1 << 0;

@@ -18,7 +18,7 @@ void change_settings(void) {
   error = 0;
 
   while (channel_6 >= 1900) {
-    delayMicroseconds(3700 * MCU_DELAY_MICRO);
+    delayMicroseconds(3700);
     send_telemetry_data();
     if (channel_1 > 1550)adjustable_setting_1 += (float)(channel_1 - 1550) * 0.000001;
     if (channel_1 < 1450)adjustable_setting_1 -= (float)(1450 - channel_1) * 0.000001;
