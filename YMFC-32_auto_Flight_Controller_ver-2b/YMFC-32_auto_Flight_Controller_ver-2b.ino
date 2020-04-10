@@ -16,11 +16,17 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 #include <EEPROM.h>
-#include <Wire.h>                          //Include the Wire.h library so we can communicate with the gyro.
-TwoWire HWire (2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
+#include <SoftWire.h>
 
 // 磁力计安装方向: true 正向安装, false 反向安装
 #define COMPASS_INSTALL_DIRECTION true
+#define I2C_SCL PB10
+#define I2C_SDA PB11
+// 调试开关
+#define DEBUG false
+
+// 因为硬件I2C有bug，所以使用软件I2C
+SoftWire HWire(I2C_SCL, I2C_SDA, SOFT_FAST);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
@@ -183,9 +189,9 @@ uint16_t setting_click_counter;
 uint8_t previous_channel_6;
 float adjustable_setting_1, adjustable_setting_2, adjustable_setting_3;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Setup routine
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * 系统初始化
+ */
 void setup() {
   pinMode(4, INPUT_ANALOG);                                     //This is needed for reading the analog value of port A4.
   //Port PB3 and PB4 are used as JTDO and JNTRST by default.
@@ -208,8 +214,11 @@ void setup() {
   EEPROM.PageBase1 = 0x801F800;
   EEPROM.PageSize  = 0x400;
 
-  //Serial.begin(9600);                                        //Set the serial output to 57600 kbps. (for debugging only)
-  delay(250);                                                 //Give the serial port some time to start to prevent data loss.
+  #if DEBUG
+    // 调试模式开启串口，波特率：57600 kps
+    Serial.begin(57600);
+    delay(250);
+  #endif
   
   /* 设置接收器输入和ESC输出的计时器 */
   timer_setup();
@@ -284,11 +293,13 @@ void setup() {
   /**
    * 等到接收器激活
    */
+  #if !DEBUG 
   while (channel_1 < 990 || channel_2 < 990 || channel_3 < 990 || channel_4 < 990)  {
     error = 4;
     error_signal();
     delay(4);
   }
+  #endif
   error = 0;
 
 
@@ -342,9 +353,10 @@ void setup() {
 
   loop_timer = micros();                                        //Set the timer for the first loop.
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Main program loop
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * 主循环程序
+ */ 
 void loop() {
   if(receiver_watchdog < 750)receiver_watchdog ++;
   if(receiver_watchdog == 750 && start == 2){
@@ -560,6 +572,12 @@ void loop() {
    */
 
   if (micros() - loop_timer > 4050)error = 2;                                      //Output an error if the loop time exceeds 4050us.
+
+  #if DEBUG
+    Serial.print("loop_time:");
+    Serial.println(micros() - loop_timer);
+  #endif
+  
   while (micros() - loop_timer < 4000);                                            //We wait until 4000us are passed.
   loop_timer = micros();                                                           //Set the timer for the next loop.
 }
