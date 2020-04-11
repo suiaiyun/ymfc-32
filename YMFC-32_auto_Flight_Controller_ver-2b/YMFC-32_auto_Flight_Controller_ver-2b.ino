@@ -26,7 +26,7 @@
 #define DEBUG false
 
 // 因为硬件I2C有bug，所以使用软件I2C
-SoftWire HWire(I2C_SCL, I2C_SDA, SOFT_FAST);
+SoftWire HWire(I2C_SCL, I2C_SDA, 2);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
@@ -293,13 +293,11 @@ void setup() {
   /**
    * 等到接收器激活
    */
-  #if !DEBUG 
   while (channel_1 < 990 || channel_2 < 990 || channel_3 < 990 || channel_4 < 990)  {
     error = 4;
     error_signal();
     delay(4);
   }
-  #endif
   error = 0;
 
 
