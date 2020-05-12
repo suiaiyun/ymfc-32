@@ -569,13 +569,7 @@ void loop() {
    * the Q&A page:
    */
 
-  if (micros() - loop_timer > 4050)error = 2;                                      //Output an error if the loop time exceeds 4050us.
-
-  #if DEBUG
-    Serial.print("loop_time:");
-    Serial.println(micros() - loop_timer);
-  #endif
-  
+  if (micros() - loop_timer > 4050)error = 2;                                      //Output an error if the loop time exceeds 4050us.  
   while (micros() - loop_timer < 4000);                                            //We wait until 4000us are passed.
   loop_timer = micros();                                                           //Set the timer for the next loop.
 }
