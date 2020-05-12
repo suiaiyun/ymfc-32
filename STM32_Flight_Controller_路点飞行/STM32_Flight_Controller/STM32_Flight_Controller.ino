@@ -69,9 +69,9 @@ float low_battery_warning = 10.5;          //Set the battery warning at 10.5V (d
 #define STM32_board_LED PC13               //Change PC13 if the LED on the STM32 is connected to another output.
 
 //Tuning parameters/settings is explained in this video: https://youtu.be/ys-YpOaA2ME
-#define variable_1_to_adjust dummy_float   //Change dummy_float to any setting that you want to tune.
-#define variable_2_to_adjust dummy_float   //Change dummy_float to any setting that you want to tune.
-#define variable_3_to_adjust dummy_float   //Change dummy_float to any setting that you want to tune.
+#define variable_1_to_adjust pid_p_gain_altitude   //Change dummy_float to any setting that you want to tune.
+#define variable_2_to_adjust pid_i_gain_altitude   //Change dummy_float to any setting that you want to tune.
+#define variable_3_to_adjust pid_d_gain_altitude   //Change dummy_float to any setting that you want to tune.
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Declaring global variables
