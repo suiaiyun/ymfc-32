@@ -14,11 +14,14 @@
 //Always remove the propellers and stay away from the motors unless you
 //are 100% certain of what you are doing.
 ///////////////////////////////////////////////////////////////////////////////////////
-#include <Wire.h>
+#include <SoftWire.h> 
 
 #define DEBUG_DBG
+#define I2C_SCL PB10
+#define I2C_SDA PB11
 
-TwoWire HWire (2, I2C_FAST_MODE);
+// 因为硬件I2C有bug，所以使用软件I2C
+SoftWire HWire(I2C_SCL, I2C_SDA, 2);
 
 //Let's declare some variables so we can use them in the complete program.
 //int16_t = signed 16 bit integer

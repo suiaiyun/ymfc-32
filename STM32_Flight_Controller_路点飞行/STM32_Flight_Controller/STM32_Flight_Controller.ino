@@ -16,11 +16,15 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 #include <EEPROM.h>
-#include <Wire.h>                          //Include the Wire.h library so we can communicate with the gyro.
-TwoWire HWire (2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
+#include <SoftWire.h>                        //Include the Wire.h library so we can communicate with the gyro.
 
 // 磁力计安装方向: true 正向安装, false 反向安装
 #define COMPASS_INSTALL_DIRECTION true
+#define I2C_SCL PB10
+#define I2C_SDA PB11
+
+// 因为硬件I2C有bug，所以使用软件I2C
+SoftWire HWire(I2C_SCL, I2C_SDA, 2);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
