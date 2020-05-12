@@ -14,11 +14,10 @@ void handler_channel_1(void) {
     if (error == 8 && start == 2)error = 0;
   }
   else channel_select_counter++;
-    if (channel_select_counter == 1)channel_1 = measured_time;
-    if (channel_select_counter == 2)channel_2 = measured_time;
-    if (channel_select_counter == 3)channel_3 = measured_time;
-    if (channel_select_counter == 4)channel_4 = measured_time;
-    if (channel_select_counter == 5)channel_5 = measured_time;
-    if (channel_select_counter == 6)channel_6 = measured_time;
+  if (channel_select_counter == 1)channel_1 = measured_time;
+  if (channel_select_counter == 2)channel_2 = measured_time;
+  if (channel_select_counter == 3)channel_3 = measured_time;
+  if (channel_select_counter == 4)channel_4 = measured_time;
+  if (channel_select_counter == 5)channel_5 = measured_time;
+  if (channel_select_counter == 6)channel_6 = measured_time;
 }
-

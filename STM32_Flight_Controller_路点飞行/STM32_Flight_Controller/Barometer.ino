@@ -1,3 +1,8 @@
+/**
+ * @brief  读气压计
+ * @param  None
+ * @retval None
+ */
 void read_barometer(void) {
   barometer_counter ++;
 
@@ -137,4 +142,3 @@ void read_barometer(void) {
     }
   }
 }
-

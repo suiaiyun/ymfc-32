@@ -19,6 +19,9 @@
 #include <Wire.h>                          //Include the Wire.h library so we can communicate with the gyro.
 TwoWire HWire (2, I2C_FAST_MODE);          //Initiate I2C port 2 at 400kHz.
 
+// 磁力计安装方向: true 正向安装, false 反向安装
+#define COMPASS_INSTALL_DIRECTION true
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,14 +53,15 @@ int pid_max_altitude = 400;                //Maximum output of the PID-controlle
 float gps_p_gain = 2.7;                    //Gain setting for the GPS P-controller (default = 2.7).
 float gps_d_gain = 6.5;                    //Gain setting for the GPS D-controller (default = 6.5).
 
-float declination = 0.0;                   //Set the declination between the magnetic and geographic north.
+//设置磁偏角(中国-山东-烟台) 
+float declination = -7.8;                  //Set the declination between the magnetic and geographic north.
 
-int16_t manual_takeoff_throttle = 0;    //Enter the manual hover point when auto take-off detection is not desired (between 1400 and 1600).
+int16_t manual_takeoff_throttle = 0;       //Enter the manual hover point when auto take-off detection is not desired (between 1400 and 1600).
 int16_t motor_idle_speed = 1100;           //Enter the minimum throttle pulse of the motors when they idle (between 1000 and 1200). 1170 for DJI
 
 uint8_t gyro_address = 0x68;               //The I2C address of the MPU-6050 is 0x68 in hexadecimal form.
 uint8_t MS5611_address = 0x77;             //The I2C address of the MS5611 barometer is 0x77 in hexadecimal form.
-uint8_t compass_address = 0x1E;            //The I2C address of the HMC5883L is 0x1E in hexadecimal form.
+uint8_t compass_address = 0x0D;            //The I2C address of the QMC5883L is 0x0D in hexadecimal form.
 
 float battery_voltage_calibration = 0.0;   //Battery voltage offset calibration.
 float low_battery_warning = 10.5;          //Set the battery warning at 10.5V (default = 10.5V).
@@ -224,11 +228,16 @@ void setup() {
   //Serial.begin(57600);                                        //Set the serial output to 57600 kbps. (for debugging only)
   //delay(250);                                                 //Give the serial port some time to start to prevent data loss.
 
+  /* 设置接收器输入和ESC输出的计时器 */
   timer_setup();                                                //Setup the timers for the receiver inputs and ESC's output.
   delay(50);                                                    //Give the timers some time to start.
 
+  /* 设置GPS模块的波特率和输出刷新率 */
   gps_setup();                                                  //Set the baud rate and output refreshrate of the GPS module.
 
+  /**
+   * 检查MPU-6050是否响应
+   */
   //Check if the MPU-6050 is responding.
   HWire.begin();                                                //Start the I2C as master
   HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
@@ -239,6 +248,9 @@ void setup() {
     delay(4);                                                   //Simulate a 250Hz refresch rate as like the main loop.
   }
 
+  /**
+   * 检测电子罗盘是否响应
+   */
   //Check if the compass is responding.
   HWire.beginTransmission(compass_address);                     //Start communication with the HMC5883L.
   error = HWire.endTransmission();                              //End the transmission and register the exit status.
@@ -248,6 +260,9 @@ void setup() {
     delay(4);                                                   //Simulate a 250Hz refresch rate as like the main loop.
   }
 
+  /**
+   * 检查MS5611气压计是否响应
+   */
   //Check if the MS5611 barometer is responding.
   HWire.beginTransmission(MS5611_address);                      //Start communication with the MS5611.
   error = HWire.endTransmission();                              //End the transmission and register the exit status.
@@ -257,19 +272,30 @@ void setup() {
     delay(4);                                                   //Simulate a 250Hz refresch rate as like the main loop.
   }
 
+  /* 初始化陀螺仪并设置正确的寄存器 */
   gyro_setup();                                                 //Initiallize the gyro and set the correct registers.
+  /* 初始化指南针并设置正确的寄存器 */
   setup_compass();                                              //Initiallize the compass and set the correct registers.
+  /* 读取并计算罗盘数据 */
   read_compass();                                               //Read and calculate the compass data.
+  /* 设置初始罗盘航向 */
   angle_yaw = actual_compass_heading;                           //Set the initial compass heading.
 
+  /**
+   * 在校准前创建5秒延迟
+   * 1250 x 4毫秒 = 5秒
+   */
   //Create a 5 second delay before calibration.
   for (count_var = 0; count_var < 1250; count_var++) {          //1250 loops of 4 microseconds = 5 seconds.
     if (count_var % 125 == 0) {                                 //Every 125 loops (500ms).
       digitalWrite(PB4, !digitalRead(PB4));                     //Change the led status.
     }
+    /* 保持250Hz刷新率 */
     delay(4);                                                   //Simulate a 250Hz refresch rate as like the main loop.
   }
+  /* 将“开始”设置回0 */
   count_var = 0;                                                //Set start back to 0.
+  /* 校准陀螺仪 */
   calibrate_gyro();                                             //Calibrate the gyro offset.
 
   //Wait until the receiver is active.
@@ -281,9 +307,19 @@ void setup() {
   error = 0;                                                    //Reset the error status to 0.
 
 
+  /* 当一切都完成后,关掉led */
   //When everything is done, turn off the led.
   red_led(LOW);                                                 //Set output PB4 low.
 
+  /**
+   * 将蓄电池电压加载到蓄电池电压变量。
+   * STM32使用12位模数转换器。
+   * analogRead=>0=0V。。。。。4095=3.3伏
+   * 分压器（1k和10k）为1:11。
+   * analogRead=>0=0V。。。。。4095=36.3伏
+   * 36.3/4095=112.81。
+   * 如果蓄电池电压为10.5V，可变蓄电池电压保持1050
+  */
   //Load the battery voltage to the battery_voltage variable.
   //The STM32 uses a 12 bit analog to digital converter.
   //analogRead => 0 = 0V ..... 4095 = 3.3V
@@ -294,6 +330,10 @@ void setup() {
   battery_voltage = (float)analogRead(4) / 112.81;
 
 
+  /**
+   * 为了计算压力，需要从MS5611中查询6个校准值。
+   * 这两个字节的值存储在内存位置0xA2及以上
+   */ 
   //For calculating the pressure the 6 calibration values need to be polled from the MS5611.
   //These 2 byte values are stored in the memory location 0xA2 and up.
   for (start = 1; start <= 6; start++) {
@@ -302,6 +342,7 @@ void setup() {
     HWire.endTransmission();                                    //End the transmission.
 
     HWire.requestFrom(MS5611_address, 2);                       //Request 2 bytes from the MS5611.
+    /* 将低字节和高字节添加到C[x]校准变量 */
     C[start] = HWire.read() << 8 | HWire.read();                //Add the low and high byte to the C[x] calibration variable.
   }
 
