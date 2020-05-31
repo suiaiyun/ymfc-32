@@ -46,8 +46,9 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 
 //During flight the battery voltage drops and the motors are spinning at a lower RPM. This has a negative effecct on the
 //altitude hold function. With the battery_compensation variable it's possible to compensate for the battery voltage drop.
-//Increase this value when the quadcopter drops due to a lower battery voltage during a non altitude hold flight.
-float battery_compensation = 40.0;
+//Increase this value when the quadcopter drops due to a lower battery voltage during a non altitude hold flight. 
+//default: 40.0
+float battery_compensation = 50.0;
 
 float pid_p_gain_altitude = 1.4;           //Gain setting for the altitude P-controller (default = 1.4).
 float pid_i_gain_altitude = 0.2;           //Gain setting for the altitude I-controller (default = 0.2).
@@ -107,6 +108,7 @@ int32_t channel_3_start, channel_3;
 int32_t channel_4_start, channel_4;
 int32_t channel_5_start, channel_5;
 int32_t channel_6_start, channel_6;
+int32_t channel_7_start, channel_7;
 int32_t measured_time, measured_time_start, receiver_watchdog;
 int32_t acc_total_vector, acc_total_vector_at_start;
 int32_t gyro_roll_cal, gyro_pitch_cal, gyro_yaw_cal;
@@ -414,11 +416,17 @@ void loop() {
 
   flight_mode = 1;                                                                 //In all other situations the flight mode is 1;
   if (channel_5 >= 1200 && channel_5 < 1600)flight_mode = 2;                       //If channel 6 is between 1200us and 1600us the flight mode is 2
-  if (channel_5 >= 1600 && channel_5 < 1950)flight_mode = 3;                       //If channel 6 is between 1600us and 1900us the flight mode is 3
-  if (channel_5 >= 1950 && channel_5 < 2100) {
+  if (channel_5 >= 1600 && channel_5 < 2100)flight_mode = 3;                       //If channel 6 is between 1600us and 1900us the flight mode is 3
+//  if (channel_5 >= 1950 && channel_5 < 2100) {
+//    if (waypoint_set == 1 && home_point_recorded == 1 && start == 2)flight_mode = 4;
+//    else flight_mode = 3;
+//  }
+
+  // 通道7为返航
+  if (flight_mode == 3 && channel_7 >= 1200 && channel_7 < 1950) {
     if (waypoint_set == 1 && home_point_recorded == 1 && start == 2)flight_mode = 4;
-    else flight_mode = 3;
   }
+  
   if (flight_mode != 4) {
     return_to_home_step = 0;
     return_to_home_lat_factor = 0;
