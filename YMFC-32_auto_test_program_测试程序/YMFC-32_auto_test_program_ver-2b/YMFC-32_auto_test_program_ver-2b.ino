@@ -42,6 +42,7 @@ int32_t channel_3_start, channel_3;
 int32_t channel_4_start, channel_4;
 int32_t channel_5_start, channel_5;
 int32_t channel_6_start, channel_6;
+int32_t channel_7_start, channel_7;
 int32_t measured_time, measured_time_start;
 uint8_t channel_select_counter;
 

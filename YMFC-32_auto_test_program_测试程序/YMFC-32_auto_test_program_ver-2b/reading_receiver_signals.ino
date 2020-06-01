@@ -46,7 +46,9 @@ void reading_receiver_signals(void) {
     Serial.print("  CH6:");
     Serial.println(channel_6);
 
+    Serial.print("  CH7:");
+    Serial.println(channel_7);
+
   }
   print_intro();
 }
-
