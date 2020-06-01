@@ -385,8 +385,20 @@ void loop() {
     channel_3 = 1500;
     channel_4 = 1500;
     error = 8;
+    /*
     if (number_used_sats > 5) {
       if (home_point_recorded == 1)channel_5 = 2000;
+      else channel_5 = 1750;
+    }
+    else channel_5 = 1500;
+    */
+
+    // 遥控丢失返航
+    if (number_used_sats > 5) {
+      if (home_point_recorded == 1) {
+        channel_5 = 2000;
+        channel_7 = 1500;
+      }
       else channel_5 = 1750;
     }
     else channel_5 = 1500;
@@ -414,17 +426,22 @@ void loop() {
   heading_lock = 0;
   if (channel_6 > 1200)heading_lock = 1;                                           //If channel 6 is between 1200us and 1600us the flight mode is 2
 
+  /*
+  // 原始飞行模式设置
   flight_mode = 1;                                                                 //In all other situations the flight mode is 1;
   if (channel_5 >= 1200 && channel_5 < 1600)flight_mode = 2;                       //If channel 6 is between 1200us and 1600us the flight mode is 2
-  if (channel_5 >= 1600 && channel_5 < 2100)flight_mode = 3;                       //If channel 6 is between 1600us and 1900us the flight mode is 3
-//  if (channel_5 >= 1950 && channel_5 < 2100) {
-//    if (waypoint_set == 1 && home_point_recorded == 1 && start == 2)flight_mode = 4;
-//    else flight_mode = 3;
-//  }
-
-  // 通道7为返航
-  if (flight_mode == 3 && channel_7 >= 1200 && channel_7 < 1950) {
+  if (channel_5 >= 1600 && channel_5 < 1950)flight_mode = 3;                       //If channel 6 is between 1600us and 1900us the flight mode is 3
+  if (channel_5 >= 1950 && channel_5 < 2100) {
     if (waypoint_set == 1 && home_point_recorded == 1 && start == 2)flight_mode = 4;
+    else flight_mode = 3;
+  }
+  */
+
+  flight_mode = 1;                                                                 //In all other situations the flight mode is 1;
+  if (channel_5 >= 1200 && channel_5 < 1600) flight_mode = 2;                      //If channel 6 is between 1200us and 1600us the flight mode is 2
+  if (channel_5 >= 1600) flight_mode = 3;                                          //If channel 6 is between 1600us and 2000us the flight mode is
+  if (flight_mode == 3 && channel_7 > 1200) {                                      // 通道7大于1200us并且当前飞行模式是3，则设置为返航模式
+    if (waypoint_set == 1 && home_point_recorded == 1 && start == 2) flight_mode = 4;
   }
   
   if (flight_mode != 4) {
