@@ -52,7 +52,7 @@ float battery_compensation = 50.0;
 
 float pid_p_gain_altitude = 1.4;           //Gain setting for the altitude P-controller (default = 1.4).
 float pid_i_gain_altitude = 0.2;           //Gain setting for the altitude I-controller (default = 0.2).
-float pid_d_gain_altitude = 0.75;          //Gain setting for the altitude D-controller (default = 0.75).
+float pid_d_gain_altitude = 1.0;          //Gain setting for the altitude D-controller (default = 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
 float gps_p_gain = 2.7;                    //Gain setting for the GPS P-controller (default = 2.7).
