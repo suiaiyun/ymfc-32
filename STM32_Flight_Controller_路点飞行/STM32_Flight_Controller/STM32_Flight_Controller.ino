@@ -424,7 +424,7 @@ void loop() {
   }
 
   heading_lock = 0;
-  if (channel_6 > 1200)heading_lock = 1;                                           //If channel 6 is between 1200us and 1600us the flight mode is 2
+  if (channel_6 > 1200)heading_lock = 1;                                           //通道6大于1200us为锁头模式
 
   /*
   // 原始飞行模式设置
@@ -437,7 +437,7 @@ void loop() {
   }
   */
 
-  flight_mode = 1;                                                                 //In all other situations the flight mode is 1;
+  flight_mode = 1;                                                                 //模式默认为1;
   if (channel_5 >= 1200 && channel_5 < 1600) flight_mode = 2;                      //If channel 6 is between 1200us and 1600us the flight mode is 2
   if (channel_5 >= 1600) flight_mode = 3;                                          //If channel 6 is between 1600us and 2000us the flight mode is
   if (flight_mode == 3 && channel_7 > 1200) {                                      // 通道7大于1200us并且当前飞行模式是3，则设置为返航模式
