@@ -69,7 +69,7 @@ uint8_t MS5611_address = 0x77;             //气压计 MS5611 的 I2C 地址
 uint8_t compass_address = 0x0D;            //电子罗盘 QMC5883L 的 I2C 地址
 
 float battery_voltage_calibration = 0.0;   //电池电压偏移校准值
-float low_battery_warning = 10.8;          //电池报警电压 3.6V * 3 = 10.8V (default = 10.5V).
+float low_battery_warning = 10.5;          //电池报警电压 3.6V * 3 = 10.8V (default = 10.5V).
 
 #define STM32_board_LED PC13               //STM32核心板上的 LED 灯连接的引脚
 
@@ -78,8 +78,8 @@ float low_battery_warning = 10.8;          //电池报警电压 3.6V * 3 = 10.8V
 //B站: https://www.bilibili.com/video/BV15b41167qW?p=13
 //油管: https://youtu.be/ys-YpOaA2ME
 #define variable_1_to_adjust battery_compensation    //variable_1_to_adjust 遥控器通道1
-#define variable_2_to_adjust pid_i_gain_altitude     //variable_2_to_adjust 遥控器通道2
-#define variable_3_to_adjust pid_d_gain_altitude     //variable_3_to_adjust 遥控器通道3
+#define variable_2_to_adjust pid_d_gain_altitude     //variable_2_to_adjust 遥控器通道2
+#define variable_3_to_adjust dummy_float             //variable_3_to_adjust 遥控器通道3
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Declaring global variables
