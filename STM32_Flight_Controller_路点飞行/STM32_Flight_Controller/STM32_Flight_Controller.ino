@@ -50,33 +50,36 @@ int pid_max_yaw = 400;                     //Maximum output of the PID-controlle
 //default: 40.0
 float battery_compensation = 50.0;
 
-float pid_p_gain_altitude = 1.4;           //Gain setting for the altitude P-controller (default = 1.4).
-float pid_i_gain_altitude = 0.2;           //Gain setting for the altitude I-controller (default = 0.2).
-float pid_d_gain_altitude = 1.0;          //Gain setting for the altitude D-controller (default = 0.75).
+float pid_p_gain_altitude = 1.4;           //高度PID控制器的P项设置 (默认值: 1.4).
+float pid_i_gain_altitude = 0.2;           //高度PID控制器的I项设置 (默认值: 0.2).
+float pid_d_gain_altitude = 1.0;           //高度PID控制器的D项设置 (默认值: 0.75).
 int pid_max_altitude = 400;                //Maximum output of the PID-controller (+/-).
 
-float gps_p_gain = 2.7;                    //Gain setting for the GPS P-controller (default = 2.7).
-float gps_d_gain = 6.5;                    //Gain setting for the GPS D-controller (default = 6.5).
+float gps_p_gain = 2.7;                    //GPS模式PID控制器的P项设置 (默认值: 2.7).
+float gps_d_gain = 6.5;                    //GPS模式PID控制器的D项设置 (默认值: 6.5).
 
 //设置磁偏角(中国-山东-烟台) 
-float declination = -7.8;                  //Set the declination between the magnetic and geographic north.
+float declination = -7.8;                  //设置磁偏角和地理位置北之间的夹角
 
-int16_t manual_takeoff_throttle = 0;       //Enter the manual hover point when auto take-off detection is not desired (between 1400 and 1600).
-int16_t motor_idle_speed = 1100;           //Enter the minimum throttle pulse of the motors when they idle (between 1000 and 1200). 1170 for DJI
+int16_t manual_takeoff_throttle = 0;       //当不需要自动起飞检测时，输入手动悬停点 (1400 - 1600之间)
+int16_t motor_idle_speed = 1100;           //电机怠速时的最小油门脉冲 (1000 - 1200之间)
 
-uint8_t gyro_address = 0x68;               //The I2C address of the MPU-6050 is 0x68 in hexadecimal form.
-uint8_t MS5611_address = 0x77;             //The I2C address of the MS5611 barometer is 0x77 in hexadecimal form.
-uint8_t compass_address = 0x0D;            //The I2C address of the QMC5883L is 0x0D in hexadecimal form.
+uint8_t gyro_address = 0x68;               //陀螺仪 MPU-6050 的 I2C 地址
+uint8_t MS5611_address = 0x77;             //气压计 MS5611 的 I2C 地址
+uint8_t compass_address = 0x0D;            //电子罗盘 QMC5883L 的 I2C 地址
 
-float battery_voltage_calibration = 0.0;   //Battery voltage offset calibration.
-float low_battery_warning = 10.5;          //Set the battery warning at 10.5V (default = 10.5V).
+float battery_voltage_calibration = 0.0;   //电池电压偏移校准值
+float low_battery_warning = 10.8;          //电池报警电压 3.6V * 3 = 10.8V (default = 10.5V).
 
-#define STM32_board_LED PC13               //Change PC13 if the LED on the STM32 is connected to another output.
+#define STM32_board_LED PC13               //STM32核心板上的 LED 灯连接的引脚
 
-//Tuning parameters/settings is explained in this video: https://youtu.be/ys-YpOaA2ME
-#define variable_1_to_adjust pid_p_gain_altitude   //Change dummy_float to any setting that you want to tune.
-#define variable_2_to_adjust pid_i_gain_altitude   //Change dummy_float to any setting that you want to tune.
-#define variable_3_to_adjust pid_d_gain_altitude   //Change dummy_float to any setting that you want to tune.
+//远程调参配置:
+//参考视频:
+//B站: https://www.bilibili.com/video/BV15b41167qW?p=13
+//油管: https://youtu.be/ys-YpOaA2ME
+#define variable_1_to_adjust battery_compensation    //variable_1_to_adjust 遥控器通道1
+#define variable_2_to_adjust pid_i_gain_altitude     //variable_2_to_adjust 遥控器通道2
+#define variable_3_to_adjust pid_d_gain_altitude     //variable_3_to_adjust 遥控器通道3
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Declaring global variables
