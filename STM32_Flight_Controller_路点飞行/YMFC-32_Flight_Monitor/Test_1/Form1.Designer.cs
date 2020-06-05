@@ -851,7 +851,7 @@
             this.groupBox3.Size = new System.Drawing.Size(280, 98);
             this.groupBox3.TabIndex = 63;
             this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "姿态";
+            this.groupBox3.Text = "飞机姿态";
             // 
             // label14
             // 
@@ -923,6 +923,7 @@
             this.Controls.Add(this.webBrowser2);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "Scherm_1";
             this.Text = "YMFC-32 飞行监控器";
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Scherm_1_MouseDown);

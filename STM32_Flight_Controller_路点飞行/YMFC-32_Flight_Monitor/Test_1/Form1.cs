@@ -181,7 +181,7 @@ namespace Test_1
             milliseconds += 100;
             if (first_receive == 1)
             {
-                if (milliseconds - last_receive > 2000 && label24.Visible == false) label24.Visible = true;
+                if (milliseconds - last_receive > 3000 && label24.Visible == false) label24.Visible = true;
                 if (milliseconds - last_receive < 1000 && label24.Visible == true) label24.Visible = false;
 
                 if (flight_mode == 1) textBox2.Text = "1-自稳模式";
