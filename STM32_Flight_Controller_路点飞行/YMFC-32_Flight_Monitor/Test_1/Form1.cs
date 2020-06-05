@@ -35,9 +35,6 @@ namespace Test_1
 {
     public partial class Scherm_1 : Form
     {
-        // mock start
-        int countor = 0;
-        // mock end
         static SerialPort port;
 
         public Scherm_1()
@@ -114,14 +111,6 @@ namespace Test_1
                 OpenClose.Text = "打开串口";
                 Location_update_timer.Enabled = false;
                 webBrowser1.Navigate("https://www.openstreetmap.org/#map=8/37.0880/120.7380");
-
-                /*
-                HtmlElement script = webBrowser1.Document.CreateElement("script");
-                script.SetAttribute("type", "text/javascript");
-                script.SetAttribute("text", "function _func(){var sidebar = document.getElementById('sidebar'); if (sidebar != null) sidebar.parentNode.removeChild(sidebar);}");
-                HtmlElement head = webBrowser1.Document.Body.AppendChild(script);
-                webBrowser1.Document.InvokeScript("_func");
-                */
 
                 webBrowser1.Visible = true;
                 webBrowser2.Visible = false;
@@ -359,14 +348,6 @@ namespace Test_1
 
         private void Location_update_timer_Tick(object sender, EventArgs e)
         {
-            countor++;
-            // mock start
-            number_used_sats = 7;
-            l_lat_gps = 37524080 + countor * 40 ;
-            l_lon_gps = 121214460 + countor ;
-         
-            // mock end
-
             if (number_used_sats > 4 && l_lat_gps != 0)
             {
                 if (home_gps_set == 0)
