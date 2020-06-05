@@ -6,3 +6,12 @@ C:\Users\Administrator\Desktop\ymcf\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test
 C:\Users\Administrator\Desktop\ymcf\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.csproj.GenerateResource.Cache
 C:\Users\Administrator\Desktop\ymcf\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.exe
 C:\Users\Administrator\Desktop\ymcf\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.pdb
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\bin\Debug\Test_1.exe.config
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.exe
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.pdb
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\bin\Debug\Test_1.exe
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\bin\Debug\Test_1.pdb
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.csprojResolveAssemblyReference.cache
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.Scherm_1.resources
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.Properties.Resources.resources
+C:\Users\Administrator\Desktop\ymfc-32\STM32_Flight_Controller_路点飞行\YMFC-32_Flight_Monitor\Test_1\obj\Debug\Test_1.csproj.GenerateResource.Cache

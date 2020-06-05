@@ -180,9 +180,9 @@
             this.label3.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.label3.Location = new System.Drawing.Point(3, 28);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(39, 20);
+            this.label3.Size = new System.Drawing.Size(69, 20);
             this.label3.TabIndex = 11;
-            this.label3.Text = "错误";
+            this.label3.Text = "错误信息";
             // 
             // textBox3
             // 
@@ -198,19 +198,18 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label5.Location = new System.Drawing.Point(8, 24);
+            this.label5.Font = new System.Drawing.Font("Segoe UI", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(8, 30);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(39, 20);
             this.label5.TabIndex = 16;
             this.label5.Text = "纬度";
-            this.label5.Click += new System.EventHandler(this.label5_Click);
             // 
             // label6
             // 
             this.label6.AutoSize = true;
             this.label6.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label6.Location = new System.Drawing.Point(8, 48);
+            this.label6.Location = new System.Drawing.Point(7, 54);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(39, 20);
             this.label6.TabIndex = 18;
@@ -220,7 +219,7 @@
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label7.Location = new System.Drawing.Point(8, 72);
+            this.label7.Location = new System.Drawing.Point(7, 78);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(39, 20);
             this.label7.TabIndex = 20;
@@ -276,7 +275,7 @@
             // 
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label8.Location = new System.Drawing.Point(8, 96);
+            this.label8.Location = new System.Drawing.Point(7, 102);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(69, 20);
             this.label8.TabIndex = 27;
@@ -286,7 +285,7 @@
             // 
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label9.Location = new System.Drawing.Point(8, 120);
+            this.label9.Location = new System.Drawing.Point(7, 126);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(69, 20);
             this.label9.TabIndex = 28;
@@ -320,7 +319,7 @@
             this.textBox11.ReadOnly = true;
             this.textBox11.Size = new System.Drawing.Size(418, 33);
             this.textBox11.TabIndex = 0;
-            this.textBox11.Text = "YMFC-32 flight monitor";
+            this.textBox11.Text = "YMFC-32 飞行监控器";
             this.textBox11.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
             // label12
@@ -339,7 +338,7 @@
             // 
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label13.Location = new System.Drawing.Point(7, 142);
+            this.label13.Location = new System.Drawing.Point(7, 148);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(39, 20);
             this.label13.TabIndex = 39;
@@ -486,6 +485,7 @@
             // panel6
             // 
             this.panel6.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.panel6.ForeColor = System.Drawing.SystemColors.ControlText;
             this.panel6.Location = new System.Drawing.Point(1, 1);
             this.panel6.Name = "panel6";
             this.panel6.Size = new System.Drawing.Size(34, 124);
@@ -522,7 +522,7 @@
             // label16
             // 
             this.label16.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label16.Location = new System.Drawing.Point(126, 24);
+            this.label16.Location = new System.Drawing.Point(126, 30);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(128, 19);
             this.label16.TabIndex = 43;
@@ -531,7 +531,7 @@
             // label17
             // 
             this.label17.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(126, 48);
+            this.label17.Location = new System.Drawing.Point(126, 54);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(128, 19);
             this.label17.TabIndex = 44;
@@ -540,7 +540,7 @@
             // label18
             // 
             this.label18.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label18.Location = new System.Drawing.Point(126, 72);
+            this.label18.Location = new System.Drawing.Point(126, 78);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(128, 19);
             this.label18.TabIndex = 45;
@@ -549,7 +549,7 @@
             // label19
             // 
             this.label19.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label19.Location = new System.Drawing.Point(126, 96);
+            this.label19.Location = new System.Drawing.Point(126, 102);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(128, 19);
             this.label19.TabIndex = 46;
@@ -558,7 +558,7 @@
             // label20
             // 
             this.label20.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label20.Location = new System.Drawing.Point(126, 120);
+            this.label20.Location = new System.Drawing.Point(126, 126);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(128, 19);
             this.label20.TabIndex = 47;
@@ -567,7 +567,7 @@
             // label22
             // 
             this.label22.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label22.Location = new System.Drawing.Point(126, 142);
+            this.label22.Location = new System.Drawing.Point(126, 148);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(128, 19);
             this.label22.TabIndex = 49;
@@ -597,7 +597,6 @@
             this.label24.TabIndex = 51;
             this.label24.Text = "遥测信号丢失";
             this.label24.Visible = false;
-            this.label24.Click += new System.EventHandler(this.label24_Click);
             // 
             // groupBox1
             // 
@@ -615,7 +614,7 @@
             this.groupBox1.Controls.Add(this.label17);
             this.groupBox1.Controls.Add(this.label16);
             this.groupBox1.Controls.Add(this.label13);
-            this.groupBox1.Font = new System.Drawing.Font("微软雅黑", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+            this.groupBox1.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox1.Location = new System.Drawing.Point(12, 86);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(280, 201);
@@ -626,7 +625,7 @@
             // label37
             // 
             this.label37.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label37.Location = new System.Drawing.Point(126, 164);
+            this.label37.Location = new System.Drawing.Point(126, 170);
             this.label37.Name = "label37";
             this.label37.Size = new System.Drawing.Size(128, 19);
             this.label37.TabIndex = 51;
@@ -636,7 +635,7 @@
             // 
             this.label38.AutoSize = true;
             this.label38.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label38.Location = new System.Drawing.Point(8, 164);
+            this.label38.Location = new System.Drawing.Point(7, 170);
             this.label38.Name = "label38";
             this.label38.Size = new System.Drawing.Size(39, 20);
             this.label38.TabIndex = 50;
@@ -649,7 +648,7 @@
             this.groupBox2.Controls.Add(this.bt_reset_waypoints);
             this.groupBox2.Controls.Add(this.label25);
             this.groupBox2.Controls.Add(this.label26);
-            this.groupBox2.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox2.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox2.Location = new System.Drawing.Point(12, 426);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(280, 104);
@@ -664,7 +663,7 @@
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(83, 23);
             this.button7.TabIndex = 57;
-            this.button7.Text = "发送";
+            this.button7.Text = "上传";
             this.button7.UseVisualStyleBackColor = true;
             this.button7.Click += new System.EventHandler(this.Button7_Click);
             // 
@@ -846,7 +845,7 @@
             this.groupBox3.Controls.Add(this.label11);
             this.groupBox3.Controls.Add(this.label4);
             this.groupBox3.Controls.Add(this.label2);
-            this.groupBox3.Font = new System.Drawing.Font("Arial", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox3.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBox3.Location = new System.Drawing.Point(12, 308);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(280, 98);
@@ -858,7 +857,7 @@
             // 
             this.label14.AutoSize = true;
             this.label14.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.Location = new System.Drawing.Point(118, 58);
+            this.label14.Location = new System.Drawing.Point(118, 62);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(16, 21);
             this.label14.TabIndex = 53;
@@ -868,7 +867,7 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label11.Location = new System.Drawing.Point(8, 58);
+            this.label11.Location = new System.Drawing.Point(8, 62);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(54, 20);
             this.label11.TabIndex = 52;
@@ -888,7 +887,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Segoe UI", 11F);
-            this.label2.Location = new System.Drawing.Point(8, 30);
+            this.label2.Location = new System.Drawing.Point(8, 34);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(54, 20);
             this.label2.TabIndex = 50;
@@ -925,7 +924,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Scherm_1";
-            this.Text = "YMFC-32 Flight Monitor";
+            this.Text = "YMFC-32 飞行监控器";
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Scherm_1_MouseDown);
             this.panel3.ResumeLayout(false);
             this.panel3.PerformLayout();

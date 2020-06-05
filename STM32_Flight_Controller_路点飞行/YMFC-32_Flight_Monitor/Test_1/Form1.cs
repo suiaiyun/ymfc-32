@@ -35,6 +35,9 @@ namespace Test_1
 {
     public partial class Scherm_1 : Form
     {
+        // mock start
+        int countor = 0;
+        // mock end
         static SerialPort port;
 
         public Scherm_1()
@@ -44,17 +47,7 @@ namespace Test_1
             ((Control)webBrowser1).Enabled = false;
             ((Control)webBrowser2).Enabled = false;
 
-            webBrowser1.Navigate("https://www.openstreetmap.org/#map=8/37.4880/120.7380");
-
-            
-            if (webBrowser1.Document != null)
-            {
-                HtmlElement script = webBrowser1.Document.CreateElement("script");
-                script.SetAttribute("type", "text/javascript");
-                script.SetAttribute("text", "function _func(){var sidebar = document.getElementById('sidebar'); if (sidebar != null) sidebar.parentNode.removeChild(sidebar);}");
-                HtmlElement head = webBrowser1.Document.Body.AppendChild(script);
-                webBrowser1.Document.InvokeScript("_func");
-            }
+            webBrowser1.Navigate("https://www.openstreetmap.org/#map=8/37.0880/120.7380");
 
             webBrowser1.Visible = true;
             webBrowser2.Visible = false;
@@ -120,14 +113,15 @@ namespace Test_1
                 port.Close();
                 OpenClose.Text = "打开串口";
                 Location_update_timer.Enabled = false;
-                webBrowser1.Navigate("https://www.openstreetmap.org/#map=8/37.4880/120.7380");
+                webBrowser1.Navigate("https://www.openstreetmap.org/#map=8/37.0880/120.7380");
 
+                /*
                 HtmlElement script = webBrowser1.Document.CreateElement("script");
                 script.SetAttribute("type", "text/javascript");
                 script.SetAttribute("text", "function _func(){var sidebar = document.getElementById('sidebar'); if (sidebar != null) sidebar.parentNode.removeChild(sidebar);}");
                 HtmlElement head = webBrowser1.Document.Body.AppendChild(script);
                 webBrowser1.Document.InvokeScript("_func");
-
+                */
 
                 webBrowser1.Visible = true;
                 webBrowser2.Visible = false;
@@ -201,44 +195,69 @@ namespace Test_1
                 if (milliseconds - last_receive > 2000 && label24.Visible == false) label24.Visible = true;
                 if (milliseconds - last_receive < 1000 && label24.Visible == true) label24.Visible = false;
 
-                if (flight_mode == 1) textBox2.Text = "1-Auto level";
-                if (flight_mode == 2) textBox2.Text = "2-Altutude hold";
-                if (flight_mode == 3) textBox2.Text = "3-GPS hold";
-                if (flight_mode == 4) textBox2.Text = "4-RTH active";
-                if (flight_mode == 5) textBox2.Text = "5-RTH Increase altitude";
-                if (flight_mode == 6) textBox2.Text = "6-RTH Returning to home position";
-                if (flight_mode == 7) textBox2.Text = "7-RTH Landing";
-                if (flight_mode == 8) textBox2.Text = "8-RTH finished";
-                if (flight_mode == 9) textBox2.Text = "9-Fly to waypoint";
-
-
-                if (start == 0)
+                if (flight_mode == 1) textBox2.Text = "1-自稳模式";
+                if (flight_mode == 2) textBox2.Text = "2-高度保持";
+                if (flight_mode == 3) textBox2.Text = "3-GPS保持";
+                if (flight_mode == 4) textBox2.Text = "4-返航激活";
+                if (flight_mode == 5) textBox2.Text = "5-返航上升高度";
+                if (flight_mode == 6) textBox2.Text = "6-返航开始";
+                if (flight_mode == 7) textBox2.Text = "7-返航下降高度";
+                if (flight_mode == 8) textBox2.Text = "8-返航结束";
+                if (flight_mode == 9) textBox2.Text = "9-飞向航路点";
+            
+                switch (start)
                 {
-                    pictureBox1.Visible = true;
-                    pictureBox2.Visible = false;
-                    pictureBox3.Visible = false;
-                }
-                if (start == 1)
-                {
-                    pictureBox1.Visible = false;
-                    pictureBox2.Visible = false;
-                    pictureBox3.Visible = true;
-                }
-                if (start == 2)
-                {
-                    pictureBox1.Visible = false;
-                    pictureBox2.Visible = true;
-                    pictureBox3.Visible = false;
+                    case 0:
+                         pictureBox1.Visible = true;
+                        pictureBox2.Visible = false;
+                        pictureBox3.Visible = false;
+                        break;
+                    case 1:
+                        pictureBox1.Visible = false;
+                        pictureBox2.Visible = false;
+                        pictureBox3.Visible = true;
+                        break;
+                    case 2:
+                        pictureBox1.Visible = false;
+                        pictureBox2.Visible = true;
+                        pictureBox3.Visible = false;
+                        break;
                 }
 
-                    if (error == 0) textBox3.Text = "No error";
-                if (error == 1) textBox3.Text = "Battery LOW";
-                if (error == 2) textBox3.Text = "Program loop time";
-                if (error == 3) textBox3.Text = "ACC cal error";
-                if (error == 4) textBox3.Text = "GPS watchdog time";
-                if (error == 5) textBox3.Text = "Manual take-off thr error";
-                if (error == 6) textBox3.Text = "No take-off detected";
-                if (error == 7) textBox3.Text = "Auto throttle error";
+                switch (error)
+                {
+                    case 0:
+                        textBox3.Text = "正常";
+                        break;
+
+                    case 1:
+                        textBox3.Text = "电池电量不足";
+                        break;
+
+                    case 2:
+                        textBox3.Text = "超出程序循环";
+                        break;
+
+                    case 3:
+                        textBox3.Text = "超过加速度计校准角度";
+                        break;
+
+                    case 4:
+                        textBox3.Text = "GPS看门狗超时";
+                        break;
+
+                    case 5:
+                        textBox3.Text = "Manual-take-off不在范围内";
+                        break;
+
+                    case 6:
+                        textBox3.Text = "未检测到起飞";
+                        break;
+
+                    case 7:
+                        textBox3.Text = "起飞油门超出范围";
+                        break;
+                }
 
                 label15.Text = number_used_sats.ToString();
                 if (number_used_sats > 6)
@@ -262,9 +281,6 @@ namespace Test_1
                     pictureBox6.Visible = false;
 
                 }
-
-
-
 
                 label16.Text = ((float)l_lat_gps / 1000000.0).ToString(new CultureInfo("en-US"));
                 label17.Text = ((float)l_lon_gps / 1000000.0).ToString(new CultureInfo("en-US"));
@@ -312,11 +328,29 @@ namespace Test_1
 
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
+            // 移除欢迎窗口
+            if (webBrowser1.Document != null)
+            {
+                HtmlElement script = webBrowser1.Document.CreateElement("script");
+                script.SetAttribute("type", "text/javascript");
+                script.SetAttribute("text", "function _func(){var sidebar = document.getElementById('sidebar'); if (sidebar != null) sidebar.parentNode.removeChild(sidebar);}");
+                HtmlElement head = webBrowser1.Document.Body.AppendChild(script);
+                webBrowser1.Document.InvokeScript("_func");
+            }
             webbrouwser_1_ready = 1;
         }
 
         private void webBrowser2_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
+            // 移除欢迎窗口
+            if (webBrowser2.Document != null)
+            {
+                HtmlElement script = webBrowser2.Document.CreateElement("script");
+                script.SetAttribute("type", "text/javascript");
+                script.SetAttribute("text", "function _func(){var sidebar = document.getElementById('sidebar'); if (sidebar != null) sidebar.parentNode.removeChild(sidebar);}");
+                HtmlElement head = webBrowser2.Document.Body.AppendChild(script);
+                webBrowser2.Document.InvokeScript("_func");
+            }
             webbrouwser_2_ready = 1;
         }
 
@@ -325,6 +359,14 @@ namespace Test_1
 
         private void Location_update_timer_Tick(object sender, EventArgs e)
         {
+            countor++;
+            // mock start
+            number_used_sats = 7;
+            l_lat_gps = 37524080 + countor * 40 ;
+            l_lon_gps = 121214460 + countor ;
+         
+            // mock end
+
             if (number_used_sats > 4 && l_lat_gps != 0)
             {
                 if (home_gps_set == 0)
@@ -350,13 +392,6 @@ namespace Test_1
 
                 if (webbrouwser_active == 1 && webbrouwser_2_ready == 1)
                 {
-                    // 移除欢迎窗口
-                    HtmlElement script = webBrowser2.Document.CreateElement("script");
-                    script.SetAttribute("type", "text/javascript");
-                    script.SetAttribute("text", "function _func(){var sidebar = document.getElementById('sidebar'); if (sidebar != null)  sidebar.parentNode.removeChild(sidebar);}");
-                    HtmlElement head = webBrowser2.Document.Body.AppendChild(script);
-                    webBrowser2.Document.InvokeScript("_func");
-
                     webBrowser2.Visible = true;
                     webBrowser1.Visible = false;
                     webbrouwser_1_ready = 0;
@@ -366,13 +401,6 @@ namespace Test_1
                 }
                 else if (webbrouwser_active == 0 && webbrouwser_1_ready == 1)
                 {
-                    // 移除欢迎窗口
-                    HtmlElement script = webBrowser1.Document.CreateElement("script");
-                    script.SetAttribute("type", "text/javascript");
-                    script.SetAttribute("text", "function _func(){var sidebar = document.getElementById('sidebar'); if (sidebar != null)  sidebar.parentNode.removeChild(sidebar);}");
-                    HtmlElement head = webBrowser1.Document.Body.AppendChild(script);
-                    webBrowser1.Document.InvokeScript("_func");
-
                     webBrowser1.Visible = true;
                     webBrowser2.Visible = false;
                     webbrouwser_2_ready = 0;
@@ -402,7 +430,7 @@ namespace Test_1
 
         public void BuildLogFile(string param)
         {
-            string sFilePath = "C:\\ErrorLog.txt";
+            string sFilePath = "ErrorLog";
             string sFileName = DateTime.Now.ToString("yyyyMMdd") + ".log";
             //文件的绝对路径
             sFileName = Path.Combine(sFilePath, sFileName);
@@ -748,14 +776,5 @@ namespace Test_1
             label36.Text = ("00:" + (flight_timer_seconds / 60).ToString("00.") + ":" + (flight_timer_seconds % 60).ToString("00."));
         }
 
-        private void label5_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label24_Click(object sender, EventArgs e)
-        {
-
-        }
     }
 }
