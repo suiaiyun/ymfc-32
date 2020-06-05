@@ -186,13 +186,13 @@ namespace Test_1
 
                 if (flight_mode == 1) textBox2.Text = "1-自稳模式";
                 if (flight_mode == 2) textBox2.Text = "2-高度保持";
-                if (flight_mode == 3) textBox2.Text = "3-GPS保持";
-                if (flight_mode == 4) textBox2.Text = "4-返航激活";
+                if (flight_mode == 3) textBox2.Text = "3-GPS定点";
+                if (flight_mode == 4) textBox2.Text = "4-准备返航";
                 if (flight_mode == 5) textBox2.Text = "5-返航上升高度";
-                if (flight_mode == 6) textBox2.Text = "6-返航开始";
+                if (flight_mode == 6) textBox2.Text = "6-开始返航";
                 if (flight_mode == 7) textBox2.Text = "7-返航下降高度";
                 if (flight_mode == 8) textBox2.Text = "8-返航结束";
-                if (flight_mode == 9) textBox2.Text = "9-飞向航路点";
+                if (flight_mode == 9) textBox2.Text = "9-飞往航点";
             
                 switch (start)
                 {
@@ -690,7 +690,7 @@ namespace Test_1
             if(flight_mode != 3 && flight_mode != 9)
             {
                 fly_waypoint_list.Enabled = false;
-                label26.Text = "Aborted";
+                label26.Text = "失败";
             }
             
             if (waypoint_send_step == 1) {
@@ -731,7 +731,7 @@ namespace Test_1
             {
                 if (waypoint_list_counter == send_telemetry_data_counter)
                 {
-                    label26.Text = "Waypoints ready";
+                    label26.Text = "航线准备就绪";
                     fly_waypoint_list.Enabled = false;
                 }
                 else
