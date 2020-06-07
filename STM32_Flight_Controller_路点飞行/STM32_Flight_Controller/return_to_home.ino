@@ -58,7 +58,7 @@ void return_to_home(void) {
     //Step - 3 decrease the altitude by increasing the pressure setpoint
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
     if (return_to_home_step == 3) {
-      if (pid_altitude_setpoint > actual_pressure + 150)return_to_home_step = 4;
+      if (pid_altitude_setpoint > actual_pressure + 30)return_to_home_step = 4;
       pid_altitude_setpoint += 0.035;
     }
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,4 +71,3 @@ void return_to_home(void) {
 
   }
 }
-
