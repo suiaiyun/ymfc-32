@@ -30,6 +30,12 @@ void calibrate_compass(void) {
 
   /* 存储电子罗盘校准值 */
   //The maximum and minimum values are needed for the next startup and are stored
+  if (has_extern_eeprom == 1)
+  for (error = 0; error < 6; error ++) {
+    EEPROM_Write(0x10 + error, compass_cal_values[error]);
+    delay(5);
+  }
+  else
   for (error = 0; error < 6; error ++) EEPROM.write(0x10 + error, compass_cal_values[error]);
 
   /* 初始化指南针并设置正确的寄存器 */
@@ -85,8 +91,16 @@ void calibrate_level(void) {
 
   red_led(LOW);
   if (error < 80) {
-    EEPROM.write(0x16, acc_pitch_cal_value);
-    EEPROM.write(0x17, acc_roll_cal_value);
+    if (has_extern_eeprom == 1) {
+      EEPROM_Write(0x16, acc_pitch_cal_value);
+      delay(3);
+      EEPROM_Write(0x17, acc_roll_cal_value);
+      delay(3);
+    } else {
+      EEPROM.write(0x16, acc_pitch_cal_value);
+      EEPROM.write(0x17, acc_roll_cal_value);
+    }
+    
     //EEPROM.write(0x10 + error, compass_cal_values[error]);
     for (error = 0; error < 15; error ++) {
       green_led(HIGH);

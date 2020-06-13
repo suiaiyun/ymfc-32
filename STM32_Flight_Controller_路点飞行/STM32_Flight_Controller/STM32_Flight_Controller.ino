@@ -26,6 +26,8 @@
 // 因为硬件I2C有bug，所以使用软件I2C
 SoftWire HWire(I2C_SCL, I2C_SDA, 2);
 
+uint8_t has_extern_eeprom = 0;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -67,6 +69,7 @@ int16_t motor_idle_speed = 1100;           //电机怠速时的最小油门脉�
 uint8_t gyro_address = 0x68;               //陀螺仪 MPU-6050 的 I2C 地址
 uint8_t MS5611_address = 0x77;             //气压计 MS5611 的 I2C 地址
 uint8_t compass_address = 0x0D;            //电子罗盘 QMC5883L 的 I2C 地址
+uint8_t eeprom_address = 0x50;            //外部 EEPROM 的 I2C 地址
 
 float battery_voltage_calibration = 0.0;   //电池电压偏移校准值
 float low_battery_warning = 10.5;          //电池报警电压 3.6V * 3 = 10.8V (default = 10.5V).
@@ -229,13 +232,34 @@ void setup() {
 
   pinMode(PB0, OUTPUT);                                         //Set PB0 as output for telemetry TX.
 
+  /*
   //EEPROM emulation setup
   EEPROM.PageBase0 = 0x801F000;
   EEPROM.PageBase1 = 0x801F800;
   EEPROM.PageSize  = 0x400;
+  */
 
   //Serial.begin(57600);                                        //Set the serial output to 57600 kbps. (for debugging only)
   //delay(250);                                                 //Give the serial port some time to start to prevent data loss.
+  
+  /*  
+  //DEBUG
+  Serial.begin(57600);
+  delay(250); 
+  int ii;
+  for (ii = 0; ii < 6; ii++) {
+    Serial.print(EEPROM_Read(0x10 + ii));
+    Serial.print(" | ");
+    
+  }
+  Serial.print(EEPROM_Read(0x16));
+  Serial.print(" | ");
+  Serial.print(EEPROM_Read(0x17));
+  Serial.print(" | ");
+  Serial.println();
+  // DEBUG
+  */
+  
 
   /* 设置接收器输入和ESC输出的计时器 */
   timer_setup();                                                //Setup the timers for the receiver inputs and ESC's output.
@@ -249,6 +273,19 @@ void setup() {
    */
   //Check if the MPU-6050 is responding.
   HWire.begin();                                                //Start the I2C as master
+
+  // 搜索eeprom 是否存在
+  HWire.beginTransmission(eeprom_address);
+  if (HWire.endTransmission() != 0) {
+    //EEPROM emulation setup
+    EEPROM.PageBase0 = 0x801F000;
+    EEPROM.PageBase1 = 0x801F800;
+    EEPROM.PageSize  = 0x400;
+  } else {
+    has_extern_eeprom = 1;
+  }
+  
+  
   HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
   error = HWire.endTransmission();                              //End the transmission and register the exit status.
   while (error != 0) {                                          //Stay in this loop because the MPU-6050 did not responde.

@@ -163,7 +163,11 @@ void setup_compass()
 
   // 从EEPROM读取校准值
   for (error = 0; error < 6; error ++) {
-    compass_cal_values[error] = EEPROM.read(0x10 + error);
+    if (has_extern_eeprom == 1) {
+      compass_cal_values[error] = EEPROM_Read(0x10 + error);
+    } else {
+      compass_cal_values[error] = EEPROM.read(0x10 + error);
+    }
   }
     
     

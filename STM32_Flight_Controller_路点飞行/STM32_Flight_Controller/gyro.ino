@@ -22,8 +22,13 @@ void gyro_setup(void) {
   HWire.write(0x03);                                            //Set the register bits as 00000011 (Set Digital Low Pass Filter to ~43Hz).
   HWire.endTransmission();                                      //End the transmission with the gyro.
 
-  acc_pitch_cal_value  = EEPROM.read(0x16);
-  acc_roll_cal_value  = EEPROM.read(0x17);
+  if (has_extern_eeprom == 1) {
+    acc_pitch_cal_value  = EEPROM_Read(0x16);
+    acc_roll_cal_value  = EEPROM_Read(0x17);
+  } else {
+    acc_pitch_cal_value  = EEPROM.read(0x16);
+    acc_roll_cal_value  = EEPROM.read(0x17);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
