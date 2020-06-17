@@ -268,10 +268,7 @@ void setup() {
   /* 设置GPS模块的波特率和输出刷新率 */
   gps_setup();                                                  //Set the baud rate and output refreshrate of the GPS module.
 
-  /**
-   * 检查MPU-6050是否响应
-   */
-  //Check if the MPU-6050 is responding.
+  
   HWire.begin();                                                //Start the I2C as master
 
   // 搜索eeprom 是否存在
@@ -285,7 +282,10 @@ void setup() {
     has_extern_eeprom = 1;
   }
   
-  
+  /**
+   * 检查MPU-6050是否响应
+   */
+  //Check if the MPU-6050 is responding.
   HWire.beginTransmission(gyro_address);                        //Start communication with the MPU-6050.
   error = HWire.endTransmission();                              //End the transmission and register the exit status.
   while (error != 0) {                                          //Stay in this loop because the MPU-6050 did not responde.
@@ -433,15 +433,15 @@ void loop() {
     else channel_5 = 1500;
     */
 
-    // 遥控丢失返航
+    // 遥控丢失保护模式
     if (number_used_sats > 5) {
       if (home_point_recorded == 1) {
         channel_5 = 2000;
-        channel_7 = 1500;
+        channel_7 = 2000;     //返航模式
       }
-      else channel_5 = 1750;
+      else channel_5 = 2000;  //模式3, GPS定点悬停
     }
-    else channel_5 = 1500;
+    else channel_5 = 1500;    //模式2, 定高悬停
   }
   //Some functions are only accessible when the quadcopter is off.
   if (start == 0) {
