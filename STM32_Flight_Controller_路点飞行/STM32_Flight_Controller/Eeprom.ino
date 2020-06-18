@@ -1,3 +1,7 @@
+
+/*
+ * 写外部EEPROM
+ */
 void EEPROM_Write(uint8_t addr, int8_t data)
 {
   HWire.beginTransmission(eeprom_address);
@@ -7,6 +11,9 @@ void EEPROM_Write(uint8_t addr, int8_t data)
   delay(1);
 }
 
+/*
+ * 读外部 EEPROM
+ */
 int8_t EEPROM_Read(uint8_t addr)
 {
   int8_t data = 0xFF;

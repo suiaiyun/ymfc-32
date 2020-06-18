@@ -271,9 +271,12 @@ void setup() {
   
   HWire.begin();                                                //Start the I2C as master
 
-  // 搜索eeprom 是否存在
+  /**
+   * 搜索 eeprom 是否存在
+   */
   HWire.beginTransmission(eeprom_address);
-  if (HWire.endTransmission() != 0) {
+  error = HWire.endTransmission();
+  if (error != 0) {
     //EEPROM emulation setup
     EEPROM.PageBase0 = 0x801F000;
     EEPROM.PageBase1 = 0x801F800;
