@@ -26,7 +26,7 @@
 // 因为硬件I2C有bug，所以使用软件I2C
 SoftWire HWire(I2C_SCL, I2C_SDA, 2);
 
-uint8_t has_extern_eeprom = 0;
+uint8_t set_extern_eeprom = 0;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //PID gain and limit settings
@@ -69,10 +69,10 @@ int16_t motor_idle_speed = 1100;           //电机怠速时的最小油门脉�
 uint8_t gyro_address = 0x68;               //陀螺仪 MPU-6050 的 I2C 地址
 uint8_t MS5611_address = 0x77;             //气压计 MS5611 的 I2C 地址
 uint8_t compass_address = 0x0D;            //电子罗盘 QMC5883L 的 I2C 地址
-uint8_t eeprom_address = 0x50;            //外部 EEPROM 的 I2C 地址
+uint8_t eeprom_address = 0x50;             //外部 EEPROM 的 I2C 地址
 
 float battery_voltage_calibration = 0.0;   //电池电压偏移校准值
-float low_battery_warning = 10.5;          //电池报警电压 3.6V * 3 = 10.8V (default = 10.5V).
+float low_battery_warning = 10.5;          //电池报警电压 3.5V * 3 = 10.5V (default = 10.5V).
 
 #define STM32_board_LED PC13               //STM32核心板上的 LED 灯连接的引脚
 
@@ -279,7 +279,7 @@ void setup() {
     EEPROM.PageBase1 = 0x801F800;
     EEPROM.PageSize  = 0x400;
   } else {
-    has_extern_eeprom = 1;
+    set_extern_eeprom = 1;
   }
   
   /**

@@ -30,7 +30,7 @@ void calibrate_compass(void) {
 
   /* 存储电子罗盘校准值 */
   //The maximum and minimum values are needed for the next startup and are stored
-  if (has_extern_eeprom == 1)
+  if (set_extern_eeprom == 1)
   for (error = 0; error < 6; error ++) {
     EEPROM_Write(0x10 + error, compass_cal_values[error]);
     delay(5);
@@ -91,7 +91,7 @@ void calibrate_level(void) {
 
   red_led(LOW);
   if (error < 80) {
-    if (has_extern_eeprom == 1) {
+    if (set_extern_eeprom == 1) {
       EEPROM_Write(0x16, acc_pitch_cal_value);
       delay(3);
       EEPROM_Write(0x17, acc_roll_cal_value);
