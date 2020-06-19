@@ -26,7 +26,7 @@ void calibrate_compass(void) {
     if (compass_z > compass_cal_values[5])compass_cal_values[5] = compass_z;
   }
   /* 重置指南针校准变量 */
-  compass_calibration_on = 0;                                                //Reset the compass_calibration_on variable.
+  compass_calibration_on = 0;
 
   /* 存储电子罗盘校准值 */
   //The maximum and minimum values are needed for the next startup and are stored
@@ -39,11 +39,11 @@ void calibrate_compass(void) {
   for (error = 0; error < 6; error ++) EEPROM.write(0x10 + error, compass_cal_values[error]);
 
   /* 初始化指南针并设置正确的寄存器 */
-  setup_compass();                                                           //Initiallize the compass and set the correct registers.
+  setup_compass();
   /* 读取并计算罗盘数据 */
-  read_compass();                                                            //Read and calculate the compass data.
+  read_compass();
   /* 设置初始罗盘航向 */
-  angle_yaw = actual_compass_heading;                                        //Set the initial compass heading.
+  angle_yaw = actual_compass_heading;
 
   red_led(LOW);
   for (error = 0; error < 15; error ++) {
@@ -55,7 +55,7 @@ void calibrate_compass(void) {
 
   error = 0;
   /* 设置下一个循环的计时器 */
-  loop_timer = micros();                                                     //Set the timer for the next loop.
+  loop_timer = micros();
 }
 
 /**
@@ -66,7 +66,7 @@ void calibrate_level(void) {
 
   while (channel_2 < 1100) {
     /* 向地面站发送遥测数据 */
-    send_telemetry_data();                                                   //Send telemetry data to the ground station.
+    send_telemetry_data();
     delay(10);
   }
   red_led(HIGH);
@@ -77,7 +77,7 @@ void calibrate_level(void) {
 
   for (error = 0; error < 64; error ++) {
     /* 向地面站发送遥测数据 */
-    send_telemetry_data();                                                   //Send telemetry data to the ground station.
+    send_telemetry_data();
     gyro_signalen();
     acc_pitch_cal_value += acc_y;
     acc_roll_cal_value += acc_x;
@@ -117,25 +117,25 @@ void calibrate_level(void) {
    *  加速度计角度计算
    *  计算加速度计总矢量
    */
-  acc_total_vector = sqrt((acc_x * acc_x) + (acc_y * acc_y) + (acc_z * acc_z));    //Calculate the total accelerometer vector.
+  acc_total_vector = sqrt((acc_x * acc_x) + (acc_y * acc_y) + (acc_z * acc_z));
 
   /**
    * 防止asin函数产生NaN
    * 计算俯仰角
    */
-  if (abs(acc_y) < acc_total_vector) {                                             //Prevent the asin function to produce a NaN.
-    angle_pitch_acc = asin((float)acc_y / acc_total_vector) * 57.296;              //Calculate the pitch angle.
+  if (abs(acc_y) < acc_total_vector) {
+    angle_pitch_acc = asin((float)acc_y / acc_total_vector) * 57.296;
   }
   /**
    * 防止asin函数产生NaN
    * 计算横滚角
    */
-  if (abs(acc_x) < acc_total_vector) {                                             //Prevent the asin function to produce a NaN.
-    angle_roll_acc = asin((float)acc_x / acc_total_vector) * 57.296;               //Calculate the roll angle.
+  if (abs(acc_x) < acc_total_vector) {
+    angle_roll_acc = asin((float)acc_x / acc_total_vector) * 57.296;
   }
   /* 将陀螺仪俯仰角设置为四旋翼机启动时的加速度计俯仰角 */
-  angle_pitch = angle_pitch_acc;                                                   //Set the gyro pitch angle equal to the accelerometer pitch angle when the quadcopter is started.
+  angle_pitch = angle_pitch_acc;
   angle_roll = angle_roll_acc;
   /* 设置下一个循环的计时器 */
-  loop_timer = micros();                                                           //Set the timer for the next loop.
+  loop_timer = micros();
 }
