@@ -1,42 +1,56 @@
-#include "mavlink/mavlink.h"
+#include "mavlink/ardupilotmega/mavlink.h"
 #include <LiquidCrystal.h>
 #include <EEPROM.h>
 
 // 定义蜂鸣器引脚
-#define BUZZER_PIN  2  
-#define ANALOG_PIN  0
+#define BUZZER_PIN   2  
+#define ANALOG_PIN   0
+#define TELEM_SERIAL Serial
 
-uint8_t receive_buffer[50], receive_buffer_counter, receive_byte_previous, receive_start_detect;
-uint8_t check_byte, temp_byte;
-uint8_t error, alarm_sound, flight_mode;
+// MAVLink 配置
+#define SYSID           1
+#define COMPID          158
+#define TYPE            MAV_TYPE_QUADROTOR
+#define SYSTEM_TYPE     MAV_TYPE_GENERIC
+#define AUTOPILOT_TYPE  MAV_AUTOPILOT_INVALID
+#define CUSTOM_MODE     0
+#define SYSTEM_MODE     MAV_MODE_PREFLIGHT
+#define SYSTEM_STATE    MAV_STATE_STANDBY
+#define MAX_STREAMS     3
+#define NUM_HBS         60
+#define SERIAL_BAUDRATE 57600
+#define BATTERY_VOLTAGE 10.5
+
+unsigned long previousMillisMAVLink = 0;
+unsigned long next_interval_MAVLink = 1000;
+int num_hbs_pasados = NUM_HBS;
+
+// MAVLink END
+
+
+uint8_t flight_mode;
 uint8_t telemetry_lost;
 uint8_t alarm_silence;
-uint8_t start, flight_timer_start;
-uint8_t hours,minutes, seconds;
+uint8_t start;
+
 uint8_t heading_lock;
-uint8_t number_used_sats;
-uint8_t fix_type, max_speed_from_eeprom, speed_kmph, max_speed, speed_loop_counter;
-uint16_t speed_buffer[5];
+int16_t button_store, roll_angle, pitch_angle;
 
-int8_t page, previous_page;
-
-uint32_t last_receive, next_sound, flight_timer, flight_timer_previous, flight_timer_from_start, flight_time_from_eeprom;
-uint32_t hours_flight_time, minutes_flight_time, seconds_flight_time;
-int32_t l_lat_gps, l_lon_gps, l_lat_gps_previous, l_lon_gps_previous;
-float lat_distance, lon_distance;
-
-int16_t temperature, button_push, button_store, roll_angle, pitch_angle;
-int16_t altitude_meters, max_altitude_meters, max_altitude_from_eeprom;
-uint16_t key_press_timer;
-int16_t takeoff_throttle;
+uint32_t last_receive;
+uint16_t l_lat_gps, l_lon_gps;
 uint16_t actual_compass_heading;
 
-float battery_voltage, adjustable_setting_1, adjustable_setting_2, adjustable_setting_3;
+// global 
+float battery_voltage;
+int16_t altitude_meters, max_altitude_meters, max_altitude_from_eeprom;
+uint8_t error;
+uint8_t number_used_sats, fix_type;
+int8_t page, previous_page, flight_timer_start;
+uint8_t hours, minutes, seconds, alarm_sound;
+uint8_t receive_start_detect;
+uint16_t key_press_timer;
+uint32_t next_sound, flight_timer, flight_timer_previous, flight_timer_from_start;
 
-byte led;
-
-
-//SoftwareSerial TelemetrySerial(11, 12); // RX, TX
 
 // 初始化lcd引脚
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
@@ -58,14 +72,14 @@ void setup() {
   OCR2A = 249;                                                              // 比较寄存器设置为249=>16ms/（1s/（16.000.000MHz/1024））-1=249
   TCCR2A |= (1 << WGM21);                                                   // 将计数器2设置为CTC（比较时清除计时器）模式
 
-  Serial.begin(57600);                                                       //Set the serial output to 9600bps.
+  mavlink_setup();
   pinMode(BUZZER_PIN, OUTPUT);                                              //Set input 2 as output for the buzzer.
 
   // 配置LCD屏幕宽度
   lcd.begin(16, 2);
   // 打印欢迎信息
   lcd.setCursor(4, 0);
-  lcd.print("APM v2.8");
+  lcd.print("APM V2.8");
   lcd.setCursor(3, 1);
   lcd.print("telemetry");
   // 蜂鸣器提示音
@@ -81,14 +95,14 @@ void setup() {
   button_store = -1;
   lcd.clear();
   telemetry_lost = 2;
-  flight_time_from_eeprom = (uint32_t)EEPROM.read(0x00)<< 24 | (uint32_t)EEPROM.read(0x01)<< 16 | (uint32_t)EEPROM.read(0x02)<< 8 | (uint32_t)EEPROM.read(0x03);
   max_altitude_from_eeprom = EEPROM.read(0x04)<< 8 | EEPROM.read(0x05);
-  max_speed_from_eeprom = (uint32_t)EEPROM.read(0x06);
-  max_speed = max_speed_from_eeprom;
+
 }
 
 // 主循环
 void loop() {
+  
+  
   if(key_press_timer > 0){
     key_press_timer = 0;
     button_store = -1;
@@ -130,12 +144,11 @@ void loop() {
     if(button_store < 150 && button_store > 100) page++; // Up键
     if(button_store < 800 && button_store > 700) page=0; // Select键
     if(page < 0)page = 0;
-    if(page > 6)page = 7;
+    if(page > 2)page = 3;
     button_store = -1;
   }
 
   if(start > 1 && flight_timer_start == 0){
-    flight_time_from_eeprom = (uint32_t)EEPROM.read(0x00)<< 24 | (uint32_t)EEPROM.read(0x01)<< 16 | (uint32_t)EEPROM.read(0x02)<< 8 | (uint32_t)EEPROM.read(0x03);
     flight_timer_from_start = millis();
     flight_timer = millis() - flight_timer_previous;
     flight_timer_start = 1;
@@ -148,41 +161,11 @@ void loop() {
       EEPROM.write(0x05, max_altitude_from_eeprom);
     }
 
-    if(max_speed > max_speed_from_eeprom){
-      max_speed_from_eeprom = max_speed;
-      EEPROM.write(0x06, max_speed_from_eeprom);
-    }
-
-    flight_time_from_eeprom += (millis() - flight_timer_from_start)/1000;
-    EEPROM.write(0x00, flight_time_from_eeprom >> 24);
-    EEPROM.write(0x01, flight_time_from_eeprom >> 16);
-    EEPROM.write(0x02, flight_time_from_eeprom >> 8);
-    EEPROM.write(0x03, flight_time_from_eeprom);
-
     flight_timer_previous = millis() - flight_timer;
     flight_timer_start = 0;
   }
 
-  while (Serial.available()) {
-    // 将接收的数据加载到接收的缓冲区数组中     
-    receive_buffer[receive_buffer_counter] = Serial.read();
-    // 在接收到的数据流中搜索开始签名
-    if(receive_byte_previous == 'J' && receive_buffer[receive_buffer_counter] == 'B'){
-      // 如果找到起始签名，则重置接收缓冲区计数器
-      receive_buffer_counter = 0;
-      // 累加接收开始检测计数器，以检查是否接收到完整的数据流
-      receive_start_detect ++;
-      // 如果检测到两个启动签名，则可能有完整的数据集可用
-      if(receive_start_detect >= 2)get_data();
-    } else {
-      // 如果未检测到启动签名, 为下一个循环安全当前接收的字节
-      receive_byte_previous = receive_buffer[receive_buffer_counter];
-      // 累加接收缓冲区计数器变量
-      receive_buffer_counter ++;
-      // 当接收缓冲区计数器变量大于48时，将其重置
-      if(receive_buffer_counter > 48)receive_buffer_counter = 0;
-    }
-  }
+  mavlink_loop();
 
   if(start > 1){
     minutes = (millis() - flight_timer)/60000;
@@ -246,39 +229,18 @@ void loop() {
   }
 
   if(page == 1){
-    if(key_press_timer == 200){
-      button_store = -1;
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Reset max spd?");
-      lcd.setCursor(0, 1);
-      lcd.print("Select = yes");
-      while(button_store == -1)delay(10);
-      if(button_store < 800 && button_store > 700){
-        while(analogRead(ANALOG_PIN) < 1000)delay(10);
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Max spd is reset");
-        EEPROM.write(0x06, 0x00);
-        max_speed_from_eeprom = EEPROM.read(0x06);
-        max_speed = max_speed_from_eeprom;
-        delay(2000);
-      }
-      lcd.clear();
-    }
-    else{
-      lcd.setCursor(0, 0);
-      lcd.print("Speed     Max");
-      lcd.setCursor(0, 1);
-      if(speed_kmph < 100)lcd.print("0");
-      if(speed_kmph < 10)lcd.print("0");
-      lcd.print(speed_kmph);
-      lcd.print("kph    ");
-      if(max_speed < 100)lcd.print("0");
-      if(max_speed < 10)lcd.print("0");
-      lcd.print(max_speed);
-      lcd.print("kph");
-    }
+    lcd.setCursor(0, 0);
+    lcd.print("roll: ");
+    if(roll_angle >= 0)lcd.print("+");
+    else lcd.print("-");
+    if(roll_angle < 10 && roll_angle > -10)lcd.print("0");
+    lcd.print(abs(roll_angle));
+    lcd.setCursor(0, 1);
+    lcd.print("pitch:");
+    if(pitch_angle >= 0)lcd.print("+");
+    else lcd.print("-");
+    if(pitch_angle < 10 && pitch_angle > -10)lcd.print("0");
+    lcd.print(abs(pitch_angle));
   }
 
   if(page == 2){
@@ -326,86 +288,6 @@ void loop() {
     }
   }
 
-  if(page == 4){
-    lcd.setCursor(0, 0);
-    lcd.print("roll: ");
-    if(roll_angle >= 0)lcd.print("+");
-    else lcd.print("-");
-    if(roll_angle < 10 && roll_angle > -10)lcd.print("0");
-    lcd.print(abs(roll_angle));
-    lcd.setCursor(0, 1);
-    lcd.print("pitch:");
-    if(pitch_angle >= 0)lcd.print("+");
-    else lcd.print("-");
-    if(pitch_angle < 10 && pitch_angle > -10)lcd.print("0");
-    lcd.print(abs(pitch_angle));
-  }
-
-  if(page == 5){
-    if(key_press_timer == 200){
-      button_store = -1;
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Reset timer?");
-      lcd.setCursor(0, 1);
-      lcd.print("Select = yes");
-      while(button_store == -1)delay(10);
-      if(button_store < 800 && button_store > 700){
-        while(analogRead(ANALOG_PIN) < 1000)delay(10);
-        lcd.clear();
-        lcd.setCursor(0, 0);
-        lcd.print("Timer is reset");
-        EEPROM.write(0x00, 0x00);
-        EEPROM.write(0x01, 0x00);
-        EEPROM.write(0x02, 0x00);
-        EEPROM.write(0x03, 0x00);
-        flight_time_from_eeprom = (uint32_t)EEPROM.read(0x00)<< 24 | (uint32_t)EEPROM.read(0x01)<< 16 | (uint32_t)EEPROM.read(0x02)<< 8 | EEPROM.read(0x03);
-        delay(2000);
-      }
-      //telemetry_lost = 2;
-      lcd.clear();
-    }
-    else{
-      lcd.setCursor(0, 0);
-      lcd.print("Tot flight time");
-      lcd.setCursor(0, 1);
-      hours_flight_time = flight_time_from_eeprom/3600;
-      minutes_flight_time = (flight_time_from_eeprom - (hours_flight_time*3600))/60;
-      seconds_flight_time = flight_time_from_eeprom - (hours_flight_time*3600) - (minutes_flight_time*60);
-      if(hours_flight_time < 10)lcd.print("0");
-      lcd.print(hours_flight_time);
-      lcd.print(":");
-      if(minutes_flight_time < 10)lcd.print("0");
-      lcd.print(minutes_flight_time);
-      lcd.print(":");
-      if(seconds_flight_time < 10)lcd.print("0");
-      lcd.print(seconds_flight_time);
-    }
-  }
-
-  if(page == 6){
-    lcd.setCursor(0, 0);
-    lcd.print("1:");
-    if(adjustable_setting_1 < 10)lcd.print("0");
-    lcd.print(adjustable_setting_1);
-    lcd.setCursor(8, 0);
-    lcd.print("3:");
-    if(adjustable_setting_3 < 10)lcd.print("0");
-    lcd.print(adjustable_setting_3);
-    lcd.setCursor(0, 1);
-    lcd.print("2:");
-    if(adjustable_setting_2 < 10)lcd.print("0");
-    lcd.print(adjustable_setting_2);
-
-  }
-
-  if(page == 7){
-    lcd.setCursor(0, 0);
-    lcd.print("Take-off thr:");
-    lcd.setCursor(0, 1);
-    lcd.print(takeoff_throttle);      
-  }
-
   if(page == 100){
     lcd.setCursor(0, 0);
     lcd.print(" Lost telemetry");
@@ -420,8 +302,6 @@ void loop() {
     lcd.setCursor(0, 1);
     if(error == 1)lcd.print("Battery LOW!");
     if(error == 5)lcd.print("Loop time exc.");
-    if(error == 6)lcd.print("Take-off error");
-    if(error == 10)lcd.print("Take-off thr.");
 
   }
 
@@ -451,84 +331,5 @@ void loop() {
     delay(10);
     digitalWrite(BUZZER_PIN, LOW);
     next_sound = millis() + 1000;
-  }
-}
-
-/**
- * 当接收到两个起始签名时，如果它们之间的
- * 接收数据是有效的数据流，则开始解析
- */
-void get_data(void)
-{
-  // 重置检查字节变量
-  check_byte = 0;
-  // 计算校验字节
-  for(temp_byte = 0; temp_byte <= 30; temp_byte++)
-    check_byte ^= receive_buffer[temp_byte];
-  // 第32个字节存放的是校验值
-  if(check_byte == receive_buffer[31]){
-    // 如果遥测信号丢失, 重新设置遥测丢失信号，因为接收到有效的数据流
-    if(telemetry_lost > 0){
-      telemetry_lost = 0;
-      page = 0;
-    }
-    // 记录最后一次接收数据的时间
-    last_receive = millis();
-    // 将接收启动检测变量重置为 1
-    receive_start_detect = 1;
-    
-    // 在下面的行中，从有效的数据流还原不同的变量。变量的名称与YMFC-32飞行控制器程序中的相同
-    error = receive_buffer[0];
-    flight_mode = receive_buffer[1];
-    battery_voltage = (float)receive_buffer[2]/10.0;
-    temperature = receive_buffer[3] | receive_buffer[4] << 8;
-    roll_angle = receive_buffer[5] - 100;
-    pitch_angle = receive_buffer[6] - 100;
-    start = receive_buffer[7];
-    altitude_meters = (receive_buffer[8] | receive_buffer[9] << 8) - 1000;
-    if(altitude_meters > max_altitude_meters)max_altitude_meters = altitude_meters;
-    takeoff_throttle = receive_buffer[10] | receive_buffer[11] << 8;
-    actual_compass_heading = receive_buffer[12] | receive_buffer[13] << 8;
-    heading_lock = receive_buffer[14];
-    number_used_sats = receive_buffer[15];
-    fix_type = receive_buffer[16];
-    l_lat_gps = (int32_t)receive_buffer[17] | (int32_t)receive_buffer[18] << 8 | (int32_t)receive_buffer[19] << 16 | (int32_t)receive_buffer[20] << 24;
-    l_lon_gps = (int32_t)receive_buffer[21] | (int32_t)receive_buffer[22] << 8 | (int32_t)receive_buffer[23] << 16 | (int32_t)receive_buffer[24] << 24;
-    adjustable_setting_1 = (float)(receive_buffer[25] | receive_buffer[26] << 8)/100.0;
-    adjustable_setting_2 = (float)(receive_buffer[27] | receive_buffer[28] << 8)/100.0;
-    adjustable_setting_3 = (float)(receive_buffer[29] | receive_buffer[30] << 8)/100.0;
-
-    if (number_used_sats >= 4)
-    {
-      lat_distance = abs(l_lat_gps - l_lat_gps_previous);
-      lat_distance *= cos(((float)l_lat_gps/1000000.0) * 0.017453);
-
-      lon_distance = abs(l_lon_gps - l_lon_gps_previous);
-      lon_distance = sqrt((lon_distance * lon_distance) + (lat_distance * lat_distance));
-      lon_distance /= 1.2626263;
-      if(start == 0)lon_distance = 0;
-
-      if(lon_distance < 250){
-        speed_loop_counter ++;
-        speed_buffer[3] = speed_buffer[2];
-        speed_buffer[2] = speed_buffer[1];
-        speed_buffer[1] = speed_buffer[0];
-        speed_buffer[0] = lon_distance;
-
-        if(speed_loop_counter == 3){
-          speed_buffer[4] = speed_buffer[3] + speed_buffer[2] + speed_buffer[1] + speed_buffer[0];
-          speed_buffer[4] /= 4;
-
-          speed_loop_counter = 0;
-          speed_kmph = speed_buffer[4];
-          if(max_speed < speed_kmph)max_speed = speed_kmph;
-        }
-
-      }
-      //Serial.println(speed_kmph);
-
-      l_lat_gps_previous = l_lat_gps;
-      l_lon_gps_previous = l_lon_gps;
-    }
   }
 }
