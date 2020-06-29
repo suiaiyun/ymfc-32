@@ -16,7 +16,7 @@
 #define CUSTOM_MODE     0
 #define SYSTEM_MODE     MAV_MODE_PREFLIGHT
 #define SYSTEM_STATE    MAV_STATE_STANDBY
-#define MAX_STREAMS     3
+#define MAX_STREAMS     6
 #define NUM_HBS         60
 #define SERIAL_BAUDRATE 57600
 #define BATTERY_VOLTAGE 10.5
