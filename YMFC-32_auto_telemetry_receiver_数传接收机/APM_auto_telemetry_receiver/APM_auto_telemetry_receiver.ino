@@ -24,11 +24,13 @@
  */
 
 
-// In case we need a second serial port for debugging
-// Comment this line if no serial debugging is needed
-//#define SOFT_SERIAL_DEBUGGING   
+/**
+ * In case we need a second serial port for debugging
+ * Comment this line if no serial debugging is needed
+ */
+#define SOFT_SERIAL_DEBUGGING   
 #ifdef SOFT_SERIAL_DEBUGGING
-  // Library to use serial debugging with a second board
+  /* Library to use serial debugging with a second board */
   #include <SoftwareSerial.h>
   SoftwareSerial mySerial(12, 13); // RX, TX
 #endif
@@ -137,25 +139,19 @@ void setup() {
 }
 
 /**
- * 中断程序
- */
-ISR(TIMER2_COMPA_vect) {
-  if(button_store == -1)button_store = analogRead(ANALOG_PIN);
-  if(button_store > 1000)button_store = -1;
-}
-
-/**
  * 主循环
  */
 void loop() {
-  // Lights management
-  // Light pulses: 2 quick flashes per second. 100 ms each cycle
+  /**
+   * Lights management 
+   * Light pulses: 2 quick flashes per second. 100 ms each cycle
+   */
   unsigned long currentMillis = millis();
   int i=0;
 
-  // Normal mode, lights on.
+  /* Normal mode, lights on. */
   if (currentMillis - previousMillis >= next_interval) {
-    // Keep time last mode changed
+    /* Keep time last mode changed */
     previousMillis = currentMillis;
 
   }
@@ -261,7 +257,8 @@ void loop() {
     if(heading_lock)lcd.print("L");
     else lcd.print((char)223);
   } 
-  else if(page == 1)
+  
+  if(page == 1)
   {
     lcd.setCursor(0, 0);
     lcd.print("roll: ");
@@ -278,7 +275,8 @@ void loop() {
     lcd.print(abs(pitch_angle));
     lcd.print(" ");
   }
-  else if(page == 2)
+  
+  if(page == 2)
   {
     lcd.setCursor(0, 0);
     lcd.print("Lat:");
@@ -287,7 +285,8 @@ void loop() {
     lcd.print("Lon:");
     lcd.print(l_lon_gps);
   }
-  else if(page == 3)
+  
+  if(page == 3)
   {
     if(key_press_timer == 200){
       button_store = -1;
@@ -324,7 +323,8 @@ void loop() {
       lcd.print("m");
     }
   } 
-  else if(page == 100)
+  
+  if(page == 100)
   {
     lcd.setCursor(0, 0);
     lcd.print(" Lost telemetry");
@@ -332,36 +332,20 @@ void loop() {
     lcd.print("   connection!"); 
     delay(1000);    
   }
-  else if(page > 100)
+  
+  if(page > 100)
   {
     lcd.setCursor(0, 0);
     lcd.print("Error:");
     lcd.print(error);
     lcd.setCursor(0, 1);
     if(error == 1)lcd.print("Battery LOW!");
-    if(error == 5)lcd.print("Loop time exc.");
   }
 
-  if(last_receive + 3000 < millis() && receive_start_detect && telemetry_lost == 0 && key_press_timer < 200) {
+  if(last_receive + 3000 < millis() && telemetry_lost == 0 && key_press_timer < 200) {
     telemetry_lost = 1;
     lcd.clear();
-    receive_start_detect = 0;
     page = 100;
-  }
-
-  if(page == 100){
-    lcd.setCursor(0, 0);
-    lcd.print(" Lost telemetry");
-    lcd.setCursor(0, 1);
-    lcd.print("   connection!"); 
-    delay(1000);    
-  } else if(page > 100){
-    lcd.setCursor(0, 0);
-    lcd.print("Error:");
-    lcd.print(error);
-    lcd.setCursor(0, 1);
-    if(error == 1)lcd.print("Battery LOW!");
-    if(error == 5)lcd.print("Loop time exc.");
   }
 
   if(error && alarm_sound == 0){
@@ -406,14 +390,16 @@ void loop() {
 */
 
         
-  // MAVLink
+  /* MAVLink */
   /* The default UART header for your MCU */ 
   int sysid = 1;                   ///< ID 20 for this airplane. 1 PX, 255 ground station
   int compid = 158;                ///< The component sending the message
   int type = MAV_TYPE_QUADROTOR;   ///< This system is an airplane / fixed wing
  
-  // Define the system type, in this case an airplane -> on-board controller
-  // uint8_t system_type = MAV_TYPE_FIXED_WING;
+  /**
+   * Define the system type, in this case an airplane -> on-board controller
+   * uint8_t system_type = MAV_TYPE_FIXED_WING;
+   */
   uint8_t system_type = MAV_TYPE_GENERIC;
   uint8_t autopilot_type = MAV_AUTOPILOT_INVALID;
  
@@ -424,35 +410,36 @@ void loop() {
   mavlink_message_t msg;
   uint8_t buf[MAVLINK_MAX_PACKET_LEN];
  
-  // Pack the message
-  //mavlink_msg_heartbeat_pack(sysid,compid, &msg, type, autopilot_type, system_mode, custom_mode, system_state);
+  /**
+   * 发送心跳包
+   * mavlink_msg_heartbeat_pack(sysid,compid, &msg, type, autopilot_type, system_mode, custom_mode, system_state);
+   */
   mavlink_msg_heartbeat_pack(1,0, &msg, type, autopilot_type, system_mode, custom_mode, system_state);
  
   // Copy the message to the send buffer
   uint16_t len = mavlink_msg_to_send_buffer(buf, &msg);
  
-  // Send the message with the standard UART send function
-  // uart0_send might be named differently depending on
-  // the individual microcontroller / library in use.
+  /**
+   * Send the message with the standard UART send function
+   * uart0_send might be named differently depending on
+   * the individual microcontroller / library in use.
+   */
   unsigned long currentMillisMAVLink = millis();
   if (currentMillisMAVLink - previousMillisMAVLink >= next_interval_MAVLink) {
-    // Guardamos la última vez que se cambió el modo
+    /* Guardamos la última vez que se cambió el modo */
     previousMillisMAVLink = currentMillisMAVLink;
-
-#ifdef SOFT_SERIAL_DEBUGGING
-    Serial.write(buf,len);
-    //mySerial.println("Ardu HB");
-#else
+    
     Serial.write(buf, len);
-#endif
 
     //Mav_Request_Data();
     num_hbs_pasados++;
     if(num_hbs_pasados>=num_hbs) {
-      // Request streams from Pixhawk
-#ifdef SOFT_SERIAL_DEBUGGING
-      mySerial.println("Streams requested!");
-#endif
+
+      #ifdef SOFT_SERIAL_DEBUGGING
+        mySerial.println("Streams requested!");
+      #endif
+      
+      /* Request streams from Pixhawk */
       Mav_Request_Data();
       num_hbs_pasados=0;
     }
@@ -490,9 +477,11 @@ void Mav_Request_Data()
    */
 
   // To be setup according to the needed information to be requested from the Pixhawk
-  const int  maxStreams = 2;
-  const uint8_t MAVStreams[maxStreams] = {MAV_DATA_STREAM_EXTENDED_STATUS, MAV_DATA_STREAM_EXTRA1};
-  const uint16_t MAVRates[maxStreams] = {0x02,0x05};
+  const int  maxStreams = 3;
+  const uint8_t MAVStreams[maxStreams] = {MAV_DATA_STREAM_EXTENDED_STATUS, 
+                                          MAV_DATA_STREAM_EXTRA1, 
+                                          MAV_DATA_STREAM_EXTRA2};
+  const uint16_t MAVRates[maxStreams] = {0x01, 0x01, 0x01};
 
     
   for (int i=0; i < maxStreams; i++) {
@@ -510,11 +499,7 @@ void Mav_Request_Data()
      */
     mavlink_msg_request_data_stream_pack(2, 200, &msg, 1, 0, MAVStreams[i], MAVRates[i], 1);
     uint16_t len = mavlink_msg_to_send_buffer(buf, &msg);
-#ifdef SOFT_SERIAL_DEBUGGING
-    Serial.write(buf,len);
-#else
     Serial.write(buf, len);
-#endif
   }
   
   // Request: PARAM_REQUEST_LIST. Only for full log recording
@@ -522,6 +507,22 @@ void Mav_Request_Data()
    * Primitive: mavlink_msg_param_request_list_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
                    uint8_t target_system, uint8_t target_component)
    */
+
+
+  // Configure
+  uint8_t system_id=2;
+  uint8_t component_id=200;
+  // mavlink_message_t* msg;
+  uint8_t target_system=1;
+  uint8_t target_component=0;
+  
+  mavlink_msg_param_request_list_pack(system_id, component_id, &msg,
+    target_system, target_component);
+  uint16_t len = mavlink_msg_to_send_buffer(buf, &msg);
+
+  // Send
+  Serial.write(buf, len);
+  
 /*
   // Configure
   uint8_t system_id=2;
@@ -551,36 +552,42 @@ void comm_receive() {
   mavlink_message_t msg;
   mavlink_status_t status;
  
-  // Echo for manual debugging
-  // Serial.println("---Start---");
+  /**
+   * Echo for manual debugging
+   * Serial.println("---Start---");
+   */
 
-#ifdef SOFT_SERIAL_DEBUGGING
   while(Serial.available()>0) {
     uint8_t c = Serial.read();
-#else
-  while(Serial.available()>0) {
-    uint8_t c = Serial.read();
-#endif
 
-    // Try to get a new message
-    if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
-
-      // Handle message
-      switch(msg.msgid) {
+    /* Try to get a new message */
+    if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) 
+    {
+      if(telemetry_lost > 0){
+        telemetry_lost = 0;
+        page = 0;
+      }
+      last_receive = millis();
+      
+      /* Handle message */
+      switch(msg.msgid) 
+      {
         case MAVLINK_MSG_ID_HEARTBEAT:  // #0: Heartbeat
           {
-            // E.g. read GCS heartbeat and go into
-            // comm lost mode if timer times out
-#ifdef SOFT_SERIAL_DEBUGGING
-            //mySerial.println("PX HB");
-#endif
+            /**
+             * E.g. read GCS heartbeat and go into
+             * comm lost mode if timer times out
+             */
+            #ifdef SOFT_SERIAL_DEBUGGING
+              mySerial.println("PX HB");
+            #endif
           }
           break;
 
         case MAVLINK_MSG_ID_SYS_STATUS:  // #1: SYS_STATUS
           {
             /* Message decoding: PRIMITIVE
-             *    mavlink_msg_sys_status_decode(const mavlink_message_t* msg, mavlink_sys_status_t* sys_status)
+             * mavlink_msg_sys_status_decode(const mavlink_message_t* msg, mavlink_sys_status_t* sys_status)
              */
             //mavlink_message_t* msg;
             mavlink_sys_status_t sys_status;
@@ -588,16 +595,16 @@ void comm_receive() {
             battery_voltage = (float)sys_status.voltage_battery / 1000;
             if (battery_voltage < BATTERY_COMPARE_VOLTAGE) error = 1;
             
-#ifdef SOFT_SERIAL_DEBUGGING
-            mySerial.print("PX SYS STATUS: ");
-            mySerial.print("[Bat (V): ");
-            mySerial.print(battery_voltage);
-            mySerial.print("], [Bat (A): ");
-            mySerial.print(sys_status.current_battery);
-            mySerial.print("], [Comms loss (%): ");
-            mySerial.print(sys_status.drop_rate_comm);
-            mySerial.println("]");
-#endif
+            #ifdef SOFT_SERIAL_DEBUGGING
+              mySerial.print("PX SYS STATUS: ");
+              mySerial.print("[Bat (V): ");
+              mySerial.print(battery_voltage);
+              mySerial.print("], [Bat (A): ");
+              mySerial.print(sys_status.current_battery);
+              mySerial.print("], [Comms loss (%): ");
+              mySerial.print(sys_status.drop_rate_comm);
+              mySerial.println("]");
+            #endif
             
           }
           break;
@@ -605,20 +612,21 @@ void comm_receive() {
         case MAVLINK_MSG_ID_PARAM_VALUE:  // #22: PARAM_VALUE
           {
             /* Message decoding: PRIMITIVE
-             *    mavlink_msg_param_value_decode(const mavlink_message_t* msg, mavlink_param_value_t* param_value)
+             * mavlink_msg_param_value_decode(const mavlink_message_t* msg, mavlink_param_value_t* param_value)
              */
             //mavlink_message_t* msg;
             mavlink_param_value_t param_value;
             mavlink_msg_param_value_decode(&msg, &param_value);
-#ifdef SOFT_SERIAL_DEBUGGING
-            mySerial.println("PX PARAM_VALUE");
-            mySerial.println(param_value.param_value);
-            mySerial.println(param_value.param_count);
-            mySerial.println(param_value.param_index);
-            mySerial.println(param_value.param_id);
-            mySerial.println(param_value.param_type);
-            mySerial.println("------ Fin -------");
-#endif
+            
+            #ifdef SOFT_SERIAL_DEBUGGING
+              mySerial.println("PX PARAM_VALUE");
+              mySerial.println(param_value.param_value);
+              mySerial.println(param_value.param_count);
+              mySerial.println(param_value.param_index);
+              mySerial.println(param_value.param_id);
+              mySerial.println(param_value.param_type);
+              mySerial.println("------ Fin -------");
+            #endif
           }
           break;
 
@@ -629,10 +637,11 @@ void comm_receive() {
              */
             mavlink_raw_imu_t raw_imu;
             mavlink_msg_raw_imu_decode(&msg, &raw_imu);
-#ifdef SOFT_SERIAL_DEBUGGING
+            
+          #ifdef SOFT_SERIAL_DEBUGGING
             mySerial.println("PX RAW IMU");
             mySerial.println(raw_imu.xacc);
-#endif
+          #endif
           }
           break;
 
@@ -646,14 +655,13 @@ void comm_receive() {
             roll_angle = (int8_t)(attitude.roll * 100);
             pitch_angle = (int8_t)(attitude.pitch * 100);
             
-#ifdef SOFT_SERIAL_DEBUGGING
+          #ifdef SOFT_SERIAL_DEBUGGING
             mySerial.println("PX ATTITUDE");
             mySerial.println(attitude.roll);
             mySerial.println(attitude.pitch);
             mySerial.println(roll_angle);
             mySerial.println(pitch_angle);
-#endif
-            
+          #endif
           }
           break;
 
@@ -668,9 +676,14 @@ void comm_receive() {
         
           #ifdef SOFT_SERIAL_DEBUGGING
             mySerial.println("PX GPS RAW");
-            mySerial.println(gps_raw.lat);
-            mySerial.println(gps_raw.lon);
-            mySerial.println(gps_raw.satellites_visible);
+            mySerial.print("lat: ");
+            mySerial.println(l_lat_gps);
+            mySerial.print("lon: ");
+            mySerial.println(l_lon_gps);
+            mySerial.print("number_used_sats: ");
+            mySerial.println(number_used_sats);
+            mySerial.print("fix_type: ");
+            mySerial.println(fix_type);
           #endif
         }
         break;
@@ -687,18 +700,42 @@ void comm_receive() {
           #endif 
         }
         break;
+
+      case MAVLINK_MSG_ID_VFR_HUD:
+        mavlink_vfr_hud_t vfr_hud;
+        mavlink_msg_vfr_hud_decode(&msg, &vfr_hud);
+        actual_compass_heading = vfr_hud.heading;
+        altitude_meters = vfr_hud.alt;
+        
+        #ifdef SOFT_SERIAL_DEBUGGING
+          mySerial.println("PX VFR HUD");
+          mySerial.print("heading: ");
+          mySerial.println(actual_compass_heading);
+          mySerial.print("alt: ");
+          mySerial.println(altitude_meters);
+        #endif 
+        
+      break;
         
        default:
-#ifdef SOFT_SERIAL_DEBUGGING
+        #ifdef SOFT_SERIAL_DEBUGGING
           mySerial.print("--- Otros: ");
           mySerial.print("[ID: ");
           mySerial.print(msg.msgid);
           mySerial.print("], [seq: ");
           mySerial.print(msg.seq);
           mySerial.println("]");
-#endif
-          break;
+        #endif
+       break;
       }
     }
   }
+}
+
+/**
+ * 中断程序
+ */
+ISR(TIMER2_COMPA_vect) {
+  if(button_store == -1)button_store = analogRead(ANALOG_PIN);
+  if(button_store > 1000)button_store = -1;
 }
