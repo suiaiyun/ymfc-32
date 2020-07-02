@@ -87,11 +87,12 @@ void Mav_Request_Data()
    */
 
   // To be setup according to the needed information to be requested from the Pixhawk
-  const int  maxStreams = 3;
-  const uint8_t MAVStreams[maxStreams] = {MAV_DATA_STREAM_EXTENDED_STATUS, 
+  const int  maxStreams = 4;
+  const uint8_t MAVStreams[maxStreams] = {MAV_DATA_STREAM_EXTENDED_STATUS,
+                                          MAV_DATA_STREAM_POSITION,
                                           MAV_DATA_STREAM_EXTRA1, 
                                           MAV_DATA_STREAM_EXTRA2};
-  const uint16_t MAVRates[maxStreams] = {0x02, 0x02, 0x02};
+  const uint16_t MAVRates[maxStreams] = {0x01, 0x01, 0x01, 0x01};
 
     
   for (int i=0; i < maxStreams; i++) {
@@ -172,12 +173,44 @@ void comm_receive() {
       {
         case MAVLINK_MSG_ID_HEARTBEAT:  // #0: Heartbeat
         {
+          mavlink_heartbeat_t hb;
+          mavlink_msg_heartbeat_decode(&msg, &hb);
+
+          switch (hb.system_status)
+          {
+            case MAV_STATE_UNINIT:
+            case MAV_STATE_BOOT:
+            case MAV_STATE_CALIBRATING:
+            case MAV_STATE_STANDBY:
+              start = 0;
+            break;
+            
+            case MAV_STATE_ACTIVE: start = 2; break;
+
+            case MAV_STATE_CRITICAL: error = 5; break;
+            
+            case MAV_STATE_EMERGENCY: error = 6; break;
+          }
+
+          switch (hb.custom_mode)
+          {
+            case 0: flight_mode = 1; break;   // 自稳模式
+            case 2: flight_mode = 2; break;   // 定高模式
+            case 3: heading_lock = 1; break;  // 锁头模式
+            case 4: flight_mode = 4; break;   // RTL模式
+            case 5: flight_mode = 3; break;   // 定点模式
+          }
+          
           /**
            * E.g. read GCS heartbeat and go into
            * comm lost mode if timer times out
            */
           #ifdef SOFT_SERIAL_DEBUGGING
-            mySerial.println("PX HB");
+            mySerial.print("PX HB -- ");
+            mySerial.print("custom_mode: ");
+            mySerial.print(hb.custom_mode);
+            mySerial.print(", system_status: ");
+            mySerial.println(hb.system_status);
           #endif
         }
         break;
@@ -223,7 +256,7 @@ void comm_receive() {
         }
         break;
 
-        case MAVLINK_MSG_ID_GPS_RAW_INT:
+        case MAVLINK_MSG_ID_GPS_RAW_INT:  // #24
         {
           mavlink_gps_raw_int_t gps_raw;
           mavlink_msg_gps_raw_int_decode(&msg, &gps_raw);
@@ -249,7 +282,7 @@ void comm_receive() {
         }
         break;
 
-        case MAVLINK_MSG_ID_VFR_HUD:
+        case MAVLINK_MSG_ID_VFR_HUD:  // #74
         {
           mavlink_vfr_hud_t vfr_hud;
           mavlink_msg_vfr_hud_decode(&msg, &vfr_hud);
@@ -265,8 +298,6 @@ void comm_receive() {
             mySerial.print(vfr_hud.airspeed);
             mySerial.print(", groundspeed: ");
             mySerial.print(vfr_hud.groundspeed);
-            mySerial.print(", climb: ");
-            mySerial.print(vfr_hud.climb);
             mySerial.print(", throttle: ");
             mySerial.println(vfr_hud.throttle);
             
@@ -278,7 +309,7 @@ void comm_receive() {
         {
           mavlink_nav_controller_output_t nco;
           mavlink_msg_nav_controller_output_decode(&msg, &nco);
-  
+        
           #ifdef SOFT_SERIAL_DEBUGGING
             mySerial.print("#");
             mySerial.print(MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT);
@@ -286,16 +317,55 @@ void comm_receive() {
             mySerial.print(nco.nav_roll);
             mySerial.print(", nav_pitch: ");
             mySerial.print(nco.nav_pitch);
-            mySerial.print(", nav_bearing: ");
-            mySerial.print(nco.nav_bearing);
-            mySerial.print(", target_bearing: ");
-            mySerial.print(nco.target_bearing);
-            
-            mySerial.print(", wp_dist: ");
-            mySerial.println(nco.wp_dist);
+            mySerial.println(", nav_bearing: ");
           #endif
         }
         break;
+
+        case MAVLINK_MSG_ID_GLOBAL_POSITION_INT:  // #33
+        {
+          mavlink_global_position_int_t global_position;
+          mavlink_msg_global_position_int_decode(&msg, &global_position);
+          
+          #ifdef SOFT_SERIAL_DEBUGGING
+//            mySerial.print("#");
+//            mySerial.print(MAVLINK_MSG_ID_GLOBAL_POSITION_INT);
+//            mySerial.print(", relative_alt: ");
+//            mySerial.print(global_position.relative_alt);
+//            mySerial.println("");
+          #endif
+        }
+        break;
+
+        case MAVLINK_MSG_ID_RC_CHANNELS_RAW: // #35
+        {
+          mavlink_rc_channels_override_t rc;
+          mavlink_msg_rc_channels_override_decode(&msg, &rc);
+
+          if (rc.chan7_raw > 1500) flight_mode = 4;  // RTL模式
+          else 
+          {
+            if (rc.chan5_raw > 990 && rc.chan5_raw < 1230)
+              flight_mode = 1;  // 自稳模式
+            else if (rc.chan5_raw > 1491 && rc.chan5_raw < 1620)
+              flight_mode = 2;  // 定高模式
+            else if (rc.chan5_raw > 1750)
+              flight_mode = 3;  // 定点模式
+          }
+          
+          
+          #ifdef SOFT_SERIAL_DEBUGGING
+//            mySerial.print("#");
+//            mySerial.print(MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE);
+//            mySerial.print(", chan5_raw: ");
+//            mySerial.print(rc.chan5_raw);
+//            mySerial.print(", chan7_raw: ");
+//            mySerial.print(rc.chan7_raw);
+//            mySerial.println("");
+          #endif
+        }
+        break;
+
         
        default:
        {

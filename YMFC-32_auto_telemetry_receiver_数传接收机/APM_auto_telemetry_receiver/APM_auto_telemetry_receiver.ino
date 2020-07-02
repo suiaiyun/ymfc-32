@@ -91,6 +91,8 @@ int16_t altitude_meters, max_altitude_meters, max_altitude_from_eeprom;
 int32_t l_lat_gps, l_lon_gps;
 uint16_t key_press_timer;
 uint32_t next_sound, last_receive;
+uint32_t flight_timer, flight_timer_from_start, flight_timer_previous, flight_time_from_eeprom;
+uint32_t hours_flight_time, minutes_flight_time, seconds_flight_time;
 
 void setup() {
   
@@ -137,6 +139,7 @@ void setup() {
   button_store = -1;
   telemetry_lost = 2;
   lcd.clear();
+  flight_time_from_eeprom = (uint32_t)EEPROM.read(0x00)<< 24 | (uint32_t)EEPROM.read(0x01)<< 16 | (uint32_t)EEPROM.read(0x02)<< 8 | (uint32_t)EEPROM.read(0x03);
 }
 
 /**
@@ -201,13 +204,18 @@ void loop() {
     if(button_store < 150 && button_store > 100) page++; // Up键
     if(button_store < 800 && button_store > 700) page=0; // Select键
     if(page < 0)page = 0;
-    if(page > 2)page = 3;
+    if(page > 3)page = 4;
     button_store = -1;
   }
 
   if(page != previous_page){
     previous_page = page;
     lcd.clear();
+  }
+
+  if(start > 1){
+    minutes = (millis() - flight_timer)/60000;
+    seconds = ((millis() - flight_timer)-minutes*60000)/1000;
   }
 
   if(page == 0){
@@ -326,6 +334,52 @@ void loop() {
       lcd.print("m");
     }
   } 
+
+  if(page == 4)
+  {
+    if(key_press_timer == 200)
+    {
+      button_store = -1;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Reset timer?");
+      lcd.setCursor(0, 1);
+      lcd.print("Select = yes");
+      while(button_store == -1)delay(10);
+      if(button_store < 800 && button_store > 700){
+        while(analogRead(ANALOG_PIN) < 1000)delay(10);
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("Timer is reset");
+        EEPROM.write(0x00, 0x00);
+        EEPROM.write(0x01, 0x00);
+        EEPROM.write(0x02, 0x00);
+        EEPROM.write(0x03, 0x00);
+        flight_time_from_eeprom = (uint32_t)EEPROM.read(0x00)<< 24 | (uint32_t)EEPROM.read(0x01)<< 16 | 
+                                  (uint32_t)EEPROM.read(0x02)<< 8 | EEPROM.read(0x03);
+        delay(2000);
+      }
+      //telemetry_lost = 2;
+      lcd.clear();
+    }
+    else
+    {
+      lcd.setCursor(0, 0);
+      lcd.print("Tot flight time");
+      lcd.setCursor(0, 1);
+      hours_flight_time = flight_time_from_eeprom/3600;
+      minutes_flight_time = (flight_time_from_eeprom - (hours_flight_time*3600))/60;
+      seconds_flight_time = flight_time_from_eeprom - (hours_flight_time*3600) - (minutes_flight_time*60);
+      if(hours_flight_time < 10)lcd.print("0");
+      lcd.print(hours_flight_time);
+      lcd.print(":");
+      if(minutes_flight_time < 10)lcd.print("0");
+      lcd.print(minutes_flight_time);
+      lcd.print(":");
+      if(seconds_flight_time < 10)lcd.print("0");
+      lcd.print(seconds_flight_time);
+    }
+  }
   
   if(page == 100)
   {
@@ -345,6 +399,8 @@ void loop() {
     lcd.print(error);
     lcd.setCursor(0, 1);
     if(error == 1)lcd.print("Battery LOW!");
+    if(error == 5)lcd.print("Error Num 5.");
+    if(error == 6)lcd.print("Fatal error!");
   }
 
   if(last_receive + 3000 < millis() && telemetry_lost == 0 && key_press_timer < 200) {
@@ -373,10 +429,12 @@ void loop() {
     digitalWrite(BUZZER_PIN, LOW);
     next_sound = millis() + 1000;
   }
-  #endif
 
-/*
-  if(start > 1 && flight_timer_start == 0){
+  if(start > 1 && flight_timer_start == 0)
+  {
+    flight_time_from_eeprom = (uint32_t)EEPROM.read(0x00)<< 24 | (uint32_t)EEPROM.read(0x01)<< 16 | 
+        (uint32_t)EEPROM.read(0x02)<< 8 | (uint32_t)EEPROM.read(0x03);
+        
     flight_timer_from_start = millis();
     flight_timer = millis() - flight_timer_previous;
     flight_timer_start = 1;
@@ -389,11 +447,17 @@ void loop() {
       EEPROM.write(0x05, max_altitude_from_eeprom);
     }
 
+    flight_time_from_eeprom += (millis() - flight_timer_from_start)/1000;
+    EEPROM.write(0x00, flight_time_from_eeprom >> 24);
+    EEPROM.write(0x01, flight_time_from_eeprom >> 16);
+    EEPROM.write(0x02, flight_time_from_eeprom >> 8);
+    EEPROM.write(0x03, flight_time_from_eeprom);
+
     flight_timer_previous = millis() - flight_timer;
     flight_timer_start = 0;
   }
-*/
-
+  
+  #endif
 }
 
 
