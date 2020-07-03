@@ -112,38 +112,12 @@ void Mav_Request_Data()
     uint16_t len = mavlink_msg_to_send_buffer(buf, &msg);
     Serial.write(buf, len);
   }
-  
-  // Request: PARAM_REQUEST_LIST. Only for full log recording
-  /*
-   * Primitive: mavlink_msg_param_request_list_pack(uint8_t system_id, uint8_t component_id, mavlink_message_t* msg,
-                   uint8_t target_system, uint8_t target_component)
-   */
-
-
-/*
-  // Configure
-  uint8_t system_id=2;
-  uint8_t component_id=200;
-  // mavlink_message_t* msg;
-  uint8_t target_system=1;
-  uint8_t target_component=0;
-
-  // Pack
-  mavlink_msg_param_request_list_pack(system_id, component_id, &msg,
-    target_system, target_component);
-  uint16_t len = mavlink_msg_to_send_buffer(buf, &msg);
-
-  // Send
-#ifdef SOFT_SERIAL_DEBUGGING
-    pxSerial.write(buf,len);
-#else
-    Serial.write(buf, len);
-#endif
-*/
 }
 
 
-
+/**
+ * 接收数据包
+ */
 void comm_receive() {
  
   mavlink_message_t msg;
@@ -181,33 +155,34 @@ void comm_receive() {
             case MAV_STATE_UNINIT:
             case MAV_STATE_BOOT:
             case MAV_STATE_CALIBRATING:
-            case MAV_STATE_STANDBY:
-              start = 0;
-            break;
-            
+            case MAV_STATE_STANDBY: start = 0; break;
             case MAV_STATE_ACTIVE: start = 2; break;
-
             case MAV_STATE_CRITICAL: error = 5; break;
-            
             case MAV_STATE_EMERGENCY: error = 6; break;
+            default: break;
           }
 
-          switch (hb.custom_mode)
+          if (flight_mode != 4) 
           {
-            case 0: flight_mode = 1; break;   // 自稳模式
-            case 2: flight_mode = 2; break;   // 定高模式
-            case 3: heading_lock = 1; break;  // 锁头模式
-            case 4: flight_mode = 4; break;   // RTL模式
-            case 5: flight_mode = 3; break;   // 定点模式
+            switch (hb.custom_mode)
+            {
+              case 0: flight_mode = 1; break;   // 自稳模式
+              case 2: flight_mode = 2; break;   // 定高模式
+              case 5: flight_mode = 3; break;   // 定点模式
+              case 9: flight_mode = 9; break;   // 降落模式
+              default: break;
+            }
           }
-          
+
           /**
            * E.g. read GCS heartbeat and go into
            * comm lost mode if timer times out
            */
           #ifdef SOFT_SERIAL_DEBUGGING
             mySerial.print("PX HB -- ");
-            mySerial.print("custom_mode: ");
+            mySerial.print("base_mode: ");
+            mySerial.print(hb.base_mode);
+            mySerial.print(", custom_mode: ");
             mySerial.print(hb.custom_mode);
             mySerial.print(", system_status: ");
             mySerial.println(hb.system_status);
@@ -227,10 +202,10 @@ void comm_receive() {
           if (battery_voltage < BATTERY_COMPARE_VOLTAGE) error = 1;
           
           #ifdef SOFT_SERIAL_DEBUGGING
-            mySerial.print("#");
-            mySerial.print(MAVLINK_MSG_ID_PARAM_VALUE);
-            mySerial.println(", battery_voltage: ");
-            mySerial.println(battery_voltage);
+//            mySerial.print("#");
+//            mySerial.print(MAVLINK_MSG_ID_PARAM_VALUE);
+//            mySerial.println(", battery_voltage: ");
+//            mySerial.println(battery_voltage);
           #endif
         }
         break;
@@ -266,18 +241,18 @@ void comm_receive() {
           fix_type = gps_raw.fix_type;
         
           #ifdef SOFT_SERIAL_DEBUGGING
-            mySerial.print("#");
-            mySerial.print(MAVLINK_MSG_ID_GPS_RAW_INT);
-            mySerial.print(", lat: ");
-            mySerial.print(l_lat_gps);
-            mySerial.print(", lon: ");
-            mySerial.print(l_lon_gps);
-            mySerial.print(", alt: ");
-            mySerial.print(gps_raw.alt);
-            mySerial.print(", number_used_sats: ");
-            mySerial.print(number_used_sats);
-            mySerial.print(", fix_type: ");
-            mySerial.println(fix_type);
+//            mySerial.print("#");
+//            mySerial.print(MAVLINK_MSG_ID_GPS_RAW_INT);
+//            mySerial.print(", lat: ");
+//            mySerial.print(l_lat_gps);
+//            mySerial.print(", lon: ");
+//            mySerial.print(l_lon_gps);
+//            mySerial.print(", alt: ");
+//            mySerial.print(gps_raw.alt);
+//            mySerial.print(", number_used_sats: ");
+//            mySerial.print(number_used_sats);
+//            mySerial.print(", fix_type: ");
+//            mySerial.println(fix_type);
           #endif
         }
         break;
@@ -300,7 +275,6 @@ void comm_receive() {
             mySerial.print(vfr_hud.groundspeed);
             mySerial.print(", throttle: ");
             mySerial.println(vfr_hud.throttle);
-            
           #endif
         }
         break;
@@ -328,9 +302,9 @@ void comm_receive() {
           mavlink_msg_global_position_int_decode(&msg, &global_position);
           
           #ifdef SOFT_SERIAL_DEBUGGING
-//            mySerial.print("#");
-//            mySerial.print(MAVLINK_MSG_ID_GLOBAL_POSITION_INT);
-//            mySerial.print(", relative_alt: ");
+            mySerial.print("#");
+            mySerial.print(MAVLINK_MSG_ID_GLOBAL_POSITION_INT);
+            mySerial.println(", relative_alt: ");
 //            mySerial.print(global_position.relative_alt);
 //            mySerial.println("");
           #endif
@@ -342,31 +316,25 @@ void comm_receive() {
           mavlink_rc_channels_override_t rc;
           mavlink_msg_rc_channels_override_decode(&msg, &rc);
 
-          if (rc.chan7_raw > 1500) flight_mode = 4;  // RTL模式
-          else 
-          {
-            if (rc.chan5_raw > 990 && rc.chan5_raw < 1230)
-              flight_mode = 1;  // 自稳模式
-            else if (rc.chan5_raw > 1491 && rc.chan5_raw < 1620)
-              flight_mode = 2;  // 定高模式
-            else if (rc.chan5_raw > 1750)
-              flight_mode = 3;  // 定点模式
-          }
+          if (rc.chan7_raw > 1800) flight_mode = 4;  // RTL模式
+          else if (flight_mode == 4) flight_mode = 0;
           
-          
+          if (rc.chan8_raw > 1800) heading_lock = 1; // 锁头模式
+
           #ifdef SOFT_SERIAL_DEBUGGING
-//            mySerial.print("#");
-//            mySerial.print(MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE);
-//            mySerial.print(", chan5_raw: ");
-//            mySerial.print(rc.chan5_raw);
-//            mySerial.print(", chan7_raw: ");
-//            mySerial.print(rc.chan7_raw);
-//            mySerial.println("");
+              mySerial.print("#");
+              mySerial.print(MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE);
+              mySerial.print(", chan5_raw: ");
+              mySerial.print(rc.chan5_raw);
+              mySerial.print(", chan7_raw: ");
+              mySerial.print(rc.chan7_raw);
+              mySerial.print(", chan8_raw: ");
+              mySerial.print(rc.chan8_raw);
+              mySerial.println("");
           #endif
         }
         break;
 
-        
        default:
        {
         #ifdef SOFT_SERIAL_DEBUGGING

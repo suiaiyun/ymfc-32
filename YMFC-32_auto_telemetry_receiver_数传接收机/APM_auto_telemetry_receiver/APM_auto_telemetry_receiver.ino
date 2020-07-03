@@ -28,7 +28,7 @@
  * In case we need a second serial port for debugging
  * Comment this line if no serial debugging is needed
  */
-//#define SOFT_SERIAL_DEBUGGING
+#define SOFT_SERIAL_DEBUGGING
 #ifdef SOFT_SERIAL_DEBUGGING
   /* Library to use serial debugging with a second board */
   #include <SoftwareSerial.h>
@@ -109,12 +109,14 @@ void setup() {
   Serial.begin(57600);
   Serial.println("MAVLink starting.");
 
-#ifdef SOFT_SERIAL_DEBUGGING
-  // [DEB] Soft serial port start
-  mySerial.begin(57600);
-  mySerial.println("Run debugging...");
-#endif
+  #ifdef SOFT_SERIAL_DEBUGGING
+    // [DEB] Soft serial port start
+    mySerial.begin(57600);
+    mySerial.println("Run debugging...");
+  #endif
 
+  // 蜂鸣器提示音
+  #ifndef SOFT_SERIAL_DEBUGGING
   // 配置LCD屏幕宽度
   lcd.begin(16, 2);
   // 打印欢迎信息
@@ -122,10 +124,8 @@ void setup() {
   lcd.print("APM V2.8");
   lcd.setCursor(3, 1);
   lcd.print("telemetry");
-
   pinMode(BUZZER_PIN, OUTPUT);
-  // 蜂鸣器提示音
-  #ifndef SOFT_SERIAL_DEBUGGING
+  
   digitalWrite(BUZZER_PIN, HIGH);
   delay(10);
   digitalWrite(BUZZER_PIN, LOW);
@@ -219,17 +219,27 @@ void loop() {
   }
 
   if(page == 0){
-    if(flight_mode <= 3){
-      lcd.setCursor(0, 0);
-      lcd.print("M");
-      lcd.print(flight_mode);
+    switch (flight_mode) 
+    {
+      case 4:
+        lcd.setCursor(0, 0);
+        lcd.print("R");
+        lcd.print(flight_mode);
+      break;
+      
+      case 9:
+        ldc.setCursor(0, 0);
+        lcd.print("L");
+        lcd.print(flight_mode);
+      break;
+      
+      default:
+        lcd.setCursor(0, 0);
+        lcd.print("M");
+        lcd.print(flight_mode);
+      break;
     }
-    else {
-      lcd.setCursor(0, 0);
-      lcd.print("R");
-      lcd.print(flight_mode - 4);
-    }
-
+    
     lcd.setCursor(5, 0);
     if(battery_voltage < 10)lcd.print("0");
     lcd.print(battery_voltage,1);
@@ -400,7 +410,7 @@ void loop() {
     lcd.setCursor(0, 1);
     if(error == 1)lcd.print("Battery LOW!");
     if(error == 5)lcd.print("Error Num 5.");
-    if(error == 6)lcd.print("Fatal error!");
+    if(error == 6)lcd.print("Fatal Error!");
   }
 
   if(last_receive + 3000 < millis() && telemetry_lost == 0 && key_press_timer < 200) {
