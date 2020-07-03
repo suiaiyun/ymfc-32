@@ -28,7 +28,7 @@
  * In case we need a second serial port for debugging
  * Comment this line if no serial debugging is needed
  */
-#define SOFT_SERIAL_DEBUGGING
+//#define SOFT_SERIAL_DEBUGGING
 #ifdef SOFT_SERIAL_DEBUGGING
   /* Library to use serial debugging with a second board */
   #include <SoftwareSerial.h>
@@ -228,7 +228,7 @@ void loop() {
       break;
       
       case 9:
-        ldc.setCursor(0, 0);
+        lcd.setCursor(0, 0);
         lcd.print("L");
         lcd.print(flight_mode);
       break;
