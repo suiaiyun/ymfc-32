@@ -87,12 +87,13 @@ void Mav_Request_Data()
    */
 
   // To be setup according to the needed information to be requested from the Pixhawk
-  const int  maxStreams = 4;
+  const int  maxStreams = 5;
   const uint8_t MAVStreams[maxStreams] = {MAV_DATA_STREAM_EXTENDED_STATUS,
                                           MAV_DATA_STREAM_POSITION,
+                                          MAV_DATA_STREAM_RC_CHANNELS,
                                           MAV_DATA_STREAM_EXTRA1, 
                                           MAV_DATA_STREAM_EXTRA2};
-  const uint16_t MAVRates[maxStreams] = {0x01, 0x01, 0x01, 0x01};
+  const uint16_t MAVRates[maxStreams] = {0x01, 0x01, 0x01, 0x01, 0x01};
 
     
   for (int i=0; i < maxStreams; i++) {
@@ -162,16 +163,14 @@ void comm_receive() {
             default: break;
           }
 
-          if (flight_mode != 4) 
+          switch (hb.custom_mode)
           {
-            switch (hb.custom_mode)
-            {
-              case 0: flight_mode = 1; break;   // 自稳模式
-              case 2: flight_mode = 2; break;   // 定高模式
-              case 5: flight_mode = 3; break;   // 定点模式
-              case 9: flight_mode = 9; break;   // 降落模式
-              default: break;
-            }
+            case 0: flight_mode = 1; break;   // 自稳模式
+            case 2: flight_mode = 2; break;   // 定高模式
+            case 5: flight_mode = 3; break;   // 定点模式
+            case 6: flight_mode = 4; break;   // RTL模式
+            case 9: flight_mode = 9; break;   // 降落模式
+            default: break;
           }
 
           /**
@@ -316,10 +315,8 @@ void comm_receive() {
           mavlink_rc_channels_override_t rc;
           mavlink_msg_rc_channels_override_decode(&msg, &rc);
 
-          if (rc.chan7_raw > 1800) flight_mode = 4;  // RTL模式
-          else if (flight_mode == 4) flight_mode = 0;
-          
           if (rc.chan8_raw > 1800) heading_lock = 1; // 锁头模式
+          else heading_lock = 0;
 
           #ifdef SOFT_SERIAL_DEBUGGING
               mySerial.print("#");
