@@ -38,7 +38,7 @@
 // 定义蜂鸣器引脚
 #define BUZZER_PIN   2  
 #define ANALOG_PIN   0
-#define BATTERY_COMPARE_VOLTAGE 10.8
+#define BATTERY_COMPARE_VOLTAGE 10.5
 
 #include <EEPROM.h>
 #include <LiquidCrystal.h>
